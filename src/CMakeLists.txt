@@ -4,67 +4,68 @@ endif()
 
 include(ECMEnableSanitizers)
 
+set(QT_VERSION_MAJOR "5")
 set(REQUIRED_QT_VERSION "5.15.0")
 
-find_package(Qt5Core ${REQUIRED_QT_VERSION} CONFIG QUIET)
-set_package_properties(Qt5Core PROPERTIES
-    DESCRIPTION "Qt5 Core component."
+find_package(Qt${QT_VERSION_MAJOR}Core ${REQUIRED_QT_VERSION} CONFIG QUIET)
+set_package_properties(Qt${QT_VERSION_MAJOR}Core PROPERTIES
+    DESCRIPTION "Qt${QT_VERSION_MAJOR} Core component."
     TYPE REQUIRED
 )
 
-find_package(Qt5Network ${REQUIRED_QT_VERSION} CONFIG QUIET)
-set_package_properties(Qt5Network PROPERTIES
-    DESCRIPTION "Qt5 Network component."
+find_package(Qt${QT_VERSION_MAJOR}Network ${REQUIRED_QT_VERSION} CONFIG QUIET)
+set_package_properties(Qt${QT_VERSION_MAJOR}Network PROPERTIES
+    DESCRIPTION "Qt${QT_VERSION_MAJOR} Network component."
     TYPE REQUIRED
 )
 
-find_package(Qt5Xml ${REQUIRED_QT_VERSION} CONFIG QUIET)
-set_package_properties(Qt5Xml PROPERTIES
-    DESCRIPTION "Qt5 Xml component."
+find_package(Qt${QT_VERSION_MAJOR}Xml ${REQUIRED_QT_VERSION} CONFIG QUIET)
+set_package_properties(Qt${QT_VERSION_MAJOR}Xml PROPERTIES
+    DESCRIPTION "Qt${QT_VERSION_MAJOR} Xml component."
     TYPE REQUIRED
 )
 
-find_package(Qt5Concurrent ${REQUIRED_QT_VERSION} CONFIG QUIET)
-set_package_properties(Qt5Concurrent PROPERTIES
-    DESCRIPTION "Qt5 Concurrent component."
+find_package(Qt${QT_VERSION_MAJOR}Concurrent ${REQUIRED_QT_VERSION} CONFIG QUIET)
+set_package_properties(Qt${QT_VERSION_MAJOR}Concurrent PROPERTIES
+    DESCRIPTION "Qt${QT_VERSION_MAJOR} Concurrent component."
     TYPE REQUIRED
 )
 
-find_package(Qt5WebEngineWidgets ${REQUIRED_QT_VERSION} CONFIG QUIET)
+find_package(Qt${QT_VERSION_MAJOR}WebEngineWidgets ${REQUIRED_QT_VERSION} CONFIG QUIET)
 if(APPLE)
-    set_package_properties(Qt5WebEngineWidgets PROPERTIES
-        DESCRIPTION "Qt5 WebEngineWidgets component."
+    set_package_properties(Qt${QT_VERSION_MAJOR}WebEngineWidgets PROPERTIES
+        DESCRIPTION "Qt${QT_VERSION_MAJOR} WebEngineWidgets component."
         TYPE RECOMMENDED
     )
 else()
-    set_package_properties(Qt5WebEngineWidgets PROPERTIES
-        DESCRIPTION "Qt5 WebEngineWidgets component."
+    set_package_properties(Qt${QT_VERSION_MAJOR}WebEngineWidgets PROPERTIES
+        DESCRIPTION "Qt${QT_VERSION_MAJOR} WebEngineWidgets component."
         TYPE REQUIRED
     )
 endif()
 
-find_package(Qt5WebEngine ${REQUIRED_QT_VERSION} CONFIG QUIET)
+find_package(Qt${QT_VERSION_MAJOR}WebEngine ${REQUIRED_QT_VERSION} CONFIG QUIET)
 if(APPLE)
-    set_package_properties(Qt5WebEngine PROPERTIES
-        DESCRIPTION "Qt5 WebEngine component."
+    set_package_properties(Qt${QT_VERSION_MAJOR}WebEngine PROPERTIES
+        DESCRIPTION "Qt${QT_VERSION_MAJOR} WebEngine component."
         TYPE RECOMMENDED
     )
 else()
-    set_package_properties(Qt5WebEngine PROPERTIES
-        DESCRIPTION "Qt5 WebEngine component."
+    set_package_properties(Qt${QT_VERSION_MAJOR}WebEngine PROPERTIES
+        DESCRIPTION "Qt${QT_VERSION_MAJOR} WebEngine component."
         TYPE REQUIRED
     )
 endif()
 
-if(Qt5WebEngine_FOUND AND Qt5WebEngineWidgets_FOUND)
+if(Qt${QT_VERSION_MAJOR}WebEngine_FOUND AND Qt${QT_VERSION_MAJOR}WebEngineWidgets_FOUND)
   add_compile_definitions(WITH_WEBENGINE=1)
 endif()
 
-get_target_property (QT_QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
-message(STATUS "Using Qt ${Qt5Core_VERSION} (${QT_QMAKE_EXECUTABLE})")
+get_target_property (QT_QMAKE_EXECUTABLE Qt::qmake IMPORTED_LOCATION)
+message(STATUS "Using Qt ${Qt${QT_VERSION_MAJOR}Core_VERSION} (${QT_QMAKE_EXECUTABLE})")
 
 if(NOT TOKEN_AUTH_ONLY)
-    find_package(Qt5Keychain REQUIRED)
+    find_package(Qt${QT_VERSION_MAJOR}Keychain REQUIRED)
 endif()
 
 # TODO: Mingw64 7.3 might also need to be excluded here as it seems to not automatically link libssp

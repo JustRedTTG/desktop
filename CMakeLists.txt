@@ -126,6 +126,10 @@ if(APPLE AND BUILD_OWNCLOUD_OSX_BUNDLE)
     add_definitions(-DBUILD_OWNCLOUD_OSX_BUNDLE)
 endif()
 
+find_package(Qt5 COMPONENTS Core)
+if (NOT Qt5Core_FOUND)
+    find_package(Qt6 COMPONENTS Core)
+endif()
 
 option(QUICK_COMPILER "Use QtQuick compiler to improve performance" OFF)
 

@@ -1,4 +1,9 @@
-find_package(Qt5 COMPONENTS Core Test Xml Network Qml Quick REQUIRED)
+if (Qt6_FOUND)
+    find_package(Qt6 COMPONENTS REQUIRED Core Test Xml Network Qml Quick)
+else()
+    set(REQUIRED_QT_VERSION "5.15.0")
+    find_package(Qt5 ${REQUIRED_QT_VERSION} COMPONENTS REQUIRED Core Test Xml Network Qml Quick)
+endif()
 
 macro(nextcloud_add_test test_class)
     set(CMAKE_AUTOMOC TRUE)
@@ -13,8 +18,8 @@ macro(nextcloud_add_test test_class)
       testutils
       nextcloudCore
       cmdCore
-      Qt5::Test
-      Qt5::Quick
+      Qt::Test
+      Qt::Quick
     )
 
     if (WIN32)
@@ -62,10 +67,10 @@ macro(nextcloud_add_benchmark test_class)
       testutils
       nextcloudCore
       cmdCore
-      Qt5::Core
-      Qt5::Test
-      Qt5::Xml
-      Qt5::Network
+      Qt::Core
+      Qt::Test
+      Qt::Xml
+      Qt::Network
     )
 
     IF(BUILD_UPDATER)
