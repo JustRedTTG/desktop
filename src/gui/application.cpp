@@ -61,6 +61,7 @@
 #include <QMessageBox>
 #include <QDesktopServices>
 #include <QGuiApplication>
+#include <QRandomGenerator>
 
 class QSocket;
 
@@ -202,7 +203,7 @@ Application::Application(int &argc, char **argv)
 {
     _startedAt.start();
 
-    qsrand(std::random_device()());
+    QRandomGenerator::global()->seed(std::random_device()());
 
 #ifdef Q_OS_WIN
     // Ensure OpenSSL config file is only loaded from app directory
