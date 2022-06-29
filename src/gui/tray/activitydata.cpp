@@ -17,7 +17,6 @@
 #include "activitydata.h"
 #include "folderman.h"
 
-
 namespace OCC {
 
 bool operator<(const Activity &rhs, const Activity &lhs)
@@ -60,6 +59,25 @@ OCC::Activity Activity::fromActivityJson(const QJsonObject &json, const AccountP
 {
     const auto activityUser = json.value(QStringLiteral("user")).toString();
 
+    const auto stringToUrl = [account] (const QString &link)  -> QUrl {
+        auto url = QUrl::fromUserInput(link);
+
+        if (!url.isValid()) {
+            return {};
+        }
+
+        if (url.host().isEmpty()) {
+            url.setScheme(account->url().scheme());
+            url.setHost(account->url().host());
+        }
+
+        if (url.port() == -1) {
+            url.setPort(account->url().port());
+        }
+
+        return url;
+    };
+
     Activity activity;
     activity._type = Activity::ActivityType;
     activity._objectType = json.value(QStringLiteral("object_type")).toString();
@@ -71,7 +89,7 @@ OCC::Activity Activity::fromActivityJson(const QJsonObject &json, const AccountP
     activity._subject = json.value(QStringLiteral("subject")).toString();
     activity._message = json.value(QStringLiteral("message")).toString();
     activity._file = json.value(QStringLiteral("object_name")).toString();
-    activity._link = QUrl(json.value(QStringLiteral("link")).toString());
+    activity._link = stringToUrl(json.value(QStringLiteral("link")).toString());
     activity._dateTime = QDateTime::fromString(json.value(QStringLiteral("datetime")).toString(), Qt::ISODate);
     activity._icon = json.value(QStringLiteral("icon")).toString();
     activity._isCurrentUserFileActivity = activity._objectType == QStringLiteral("files") && activityUser == account->davUser();
@@ -93,8 +111,12 @@ OCC::Activity Activity::fromActivityJson(const QJsonObject &json, const AccountP
                 parameterJsonObject.value(QStringLiteral("id")).toString(),
                 parameterJsonObject.value(QStringLiteral("name")).toString(),
                 parameterJsonObject.contains(QStringLiteral("path")) ? parameterJsonObject.value(QStringLiteral("path")).toString() : QString(),
-                parameterJsonObject.contains(QStringLiteral("link")) ? QUrl(parameterJsonObject.value(QStringLiteral("link")).toString()) : QUrl(),
+                stringToUrl(parameterJsonObject.value(QStringLiteral("link")).toString()),
             };
+
+            if (activity._objectType == QStringLiteral("calendar") && activity._link.isEmpty()) {
+                activity._link = activity._subjectRichParameters[i.key()].link;
+            }
         }
 
         auto displayString = activity._subjectRich;
