@@ -4,9 +4,6 @@ endif()
 
 include(ECMEnableSanitizers)
 
-set(QT_VERSION_MAJOR "5")
-set(REQUIRED_QT_VERSION "5.15.0")
-
 find_package(Qt${QT_VERSION_MAJOR}Core ${REQUIRED_QT_VERSION} CONFIG QUIET)
 set_package_properties(Qt${QT_VERSION_MAJOR}Core PROPERTIES
     DESCRIPTION "Qt${QT_VERSION_MAJOR} Core component."
@@ -44,10 +41,10 @@ else()
     )
 endif()
 
-find_package(Qt${QT_VERSION_MAJOR}WebEngine ${REQUIRED_QT_VERSION} CONFIG QUIET)
+find_package(Qt${QT_VERSION_MAJOR}WebEngineCore ${REQUIRED_QT_VERSION} CONFIG QUIET)
 if(APPLE)
-    set_package_properties(Qt${QT_VERSION_MAJOR}WebEngine PROPERTIES
-        DESCRIPTION "Qt${QT_VERSION_MAJOR} WebEngine component."
+    set_package_properties(Qt${QT_VERSION_MAJOR}WebEngineCore PROPERTIES
+        DESCRIPTION "Qt${QT_VERSION_MAJOR} WebEngineCore component."
         TYPE RECOMMENDED
     )
 else()
