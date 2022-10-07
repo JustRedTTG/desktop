@@ -32,6 +32,7 @@
 #include <QTextEdit>
 #include <QToolButton>
 #include <QPropertyAnimation>
+#include <QActionGroup>
 
 namespace {
     const char *passwordIsSetPlaceholder = "●●●●●●●●";

@@ -20,7 +20,7 @@
 #include <QSslConfiguration>
 #include <QNetworkCookie>
 #include <QNetworkCookieJar>
-#include <QNetworkConfiguration>
+#include <QNetworkInformation>
 #include <QUuid>
 
 #include "cookiejar.h"

@@ -31,7 +31,7 @@ namespace OCC {
 
 Q_LOGGING_CATEGORY(lcBandwidthManager, "nextcloud.sync.bandwidthmanager", QtInfoMsg)
 
-// Because of the many layers of buffering inside Qt (and probably the OS and the network)
+// Because of the many layers of buffering inside Qt${QT_VERSION_MAJOR} (and probably the OS and the network)
 // we cannot lower this value much more. If we do, the estimated bw will be very high
 // because the buffers fill fast while the actual network algorithms are not relevant yet.
 static qint64 relativeLimitMeasuringTimerIntervalMsec = 1000 * 2;

@@ -277,7 +277,7 @@ SocketApi::SocketApi(QObject *parent)
             qCDebug(lcSocketApi) << "creating" << info.dir().path() << result;
             if (result) {
                 QFile::setPermissions(socketPath,
-                    QFile::Permissions(QFile::ReadOwner + QFile::WriteOwner + QFile::ExeOwner));
+                    QFile::Permissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner));
             }
         }
     }
@@ -371,7 +371,7 @@ void SocketApi::slotReadSocket()
             } else {
                 functionWithArguments += command + QByteArrayLiteral("(QString,SocketListener*)");
             }
-            Q_ASSERT(staticQtMetaObject.normalizedSignature(functionWithArguments) == functionWithArguments);
+            Q_ASSERT(staticMetaObject.normalizedSignature(functionWithArguments) == functionWithArguments);
             const auto out = staticMetaObject.indexOfMethod(functionWithArguments);
             if (out == -1) {
                 listener->sendError(QStringLiteral("Function %1 not found").arg(QString::fromUtf8(functionWithArguments)));

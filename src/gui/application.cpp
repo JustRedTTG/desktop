@@ -203,7 +203,7 @@ Application::Application(int &argc, char **argv)
 {
     _startedAt.start();
 
-    QRandomGenerator::global()->seed(std::random_device()());
+//    QRandomGenerator::global()->seed(std::random_device()());
 
 #ifdef Q_OS_WIN
     // Ensure OpenSSL config file is only loaded from app directory
@@ -219,7 +219,7 @@ Application::Application(int &argc, char **argv)
     setOrganizationDomain(QLatin1String(APPLICATION_REV_DOMAIN));
 
     // setDesktopFilename to provide wayland compatibility (in general: conformance with naming standards)
-    // but only on Qt >= 5.7, where setDesktopFilename was introduced
+    // but only on Qt${QT_VERSION_MAJOR} >= 5.7, where setDesktopFilename was introduced
 #if (QT_VERSION >= 0x050700)
     QString desktopFileName = QString(QLatin1String(LINUX_APPLICATION_ID)
                                         + QLatin1String(".desktop"));
@@ -382,7 +382,7 @@ Application::Application(int &argc, char **argv)
     QTimer::singleShot(0, this, &Application::slotCheckConnection);
 
     // Can't use onlineStateChanged because it is always true on modern systems because of many interfaces
-    connect(&_networkConfigurationManager, &QNetworkConfigurationManager::configurationChanged,
+    connect(QNetworkInformation::instance(), &QNetworkInformation::reachabilityChanged,
         this, &Application::slotSystemOnlineConfigurationChanged);
 
 #if defined(BUILD_UPDATER)
@@ -468,9 +468,10 @@ void Application::slotCleanup()
 // FIXME: This is not ideal yet since a ConnectionValidator might already be running and is in
 // progress of timing out in some seconds.
 // Maybe we need 2 validators, one triggered by timer, one by network configuration changes?
-void Application::slotSystemOnlineConfigurationChanged(QNetworkConfiguration cnf)
+void Application::slotSystemOnlineConfigurationChanged()
 {
-    if (cnf.state() & QNetworkConfiguration::Active) {
+    if (QNetworkInformation::instance()->reachability() == QNetworkInformation::Reachability::Site ||
+            QNetworkInformation::instance()->reachability() == QNetworkInformation::Reachability::Online) {
         const auto list = AccountManager::instance()->accounts();
         for (const auto &accountState : list) {
             accountState->systemOnlineConfigurationChanged();

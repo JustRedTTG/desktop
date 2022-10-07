@@ -45,7 +45,7 @@
 #include <QScopedValueRollback>
 #include <QMessageBox>
 
-#include <KZip>
+//#include <KZip>
 
 #define QTLEGACY (QT_VERSION < QT_VERSION_CHECK(5,9,0))
 
@@ -110,24 +110,24 @@ QVector<ZipEntry> createDebugArchiveFileList()
 
 void createDebugArchive(const QString &filename)
 {
-    const auto entries = createDebugArchiveFileList();
+//    const auto entries = createDebugArchiveFileList();
 
-    KZip zip(filename);
-    zip.open(QIODevice::WriteOnly);
+//    KZip zip(filename);
+//    zip.open(QIODevice::WriteOnly);
 
-    for (const auto &entry : entries) {
-        zip.addLocalFile(entry.localFilename, entry.zipFilename);
-    }
+//    for (const auto &entry : entries) {
+//        zip.addLocalFile(entry.localFilename, entry.zipFilename);
+//    }
 
-    const auto clientParameters = QCoreApplication::arguments().join(' ').toUtf8();
-    zip.prepareWriting("__nextcloud_client_parameters.txt", {}, {}, clientParameters.size());
-    zip.writeData(clientParameters, clientParameters.size());
-    zip.finishWriting(clientParameters.size());
+//    const auto clientParameters = QCoreApplication::arguments().join(' ').toUtf8();
+//    zip.prepareWriting("__nextcloud_client_parameters.txt", {}, {}, clientParameters.size());
+//    zip.writeData(clientParameters, clientParameters.size());
+//    zip.finishWriting(clientParameters.size());
 
-    const auto buildInfo = QString(OCC::Theme::instance()->about() + "\n\n" + OCC::Theme::instance()->aboutDetails()).toUtf8();
-    zip.prepareWriting("__nextcloud_client_buildinfo.txt", {}, {}, buildInfo.size());
-    zip.writeData(buildInfo, buildInfo.size());
-    zip.finishWriting(buildInfo.size());
+//    const auto buildInfo = QString(OCC::Theme::instance()->about() + "\n\n" + OCC::Theme::instance()->aboutDetails()).toUtf8();
+//    zip.prepareWriting("__nextcloud_client_buildinfo.txt", {}, {}, buildInfo.size());
+//    zip.writeData(buildInfo, buildInfo.size());
+//    zip.finishWriting(buildInfo.size());
 }
 }
 

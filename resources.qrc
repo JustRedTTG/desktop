@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/qml">
+    <qresource prefix="/qmlold">
         <file>src/gui/UserStatusSelector.qml</file>
         <file>src/gui/UserStatusSelectorPage.qml</file>
         <file>src/gui/EmojiPicker.qml</file>

@@ -9,6 +9,7 @@
 #include "syncenginetestutils.h"
 #include <syncengine.h>
 #include <propagatorjobs.h>
+#include <QTextCodec>
 
 using namespace OCC;
 

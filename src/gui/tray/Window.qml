@@ -2,8 +2,8 @@ import QtQuick 2.15
 import QtQuick.Window 2.3
 import QtQuick.Controls 2.3
 import QtQuick.Layouts 1.2
-import QtGraphicalEffects 1.0
 import Qt.labs.platform 1.1 as NativeDialogs
+import Qt5Compat.GraphicalEffects
 import "../"
 
 // Custom qml modules are in /theme (and included by resources.qrc)
@@ -102,19 +102,6 @@ ApplicationWindow {
         }
     }
 
-    OpacityMask {
-        anchors.fill: parent
-        source: ShaderEffectSource {
-            sourceItem: trayWindowMainItem
-            hideSource: true
-        }
-        maskSource: Rectangle {
-            width: trayWindow.width
-            height: trayWindow.height
-            radius: Systray.useNormalWindow ? 0.0 : Style.trayWindowRadius
-        }
-    }
-
     Drawer {
         id: userStatusDrawer
         width: parent.width
@@ -204,183 +191,183 @@ ApplicationWindow {
                         }
                     }
 
-                    Menu {
-                        id: accountMenu
+//                    Menu {
+//                        id: accountMenu
 
-                        // x coordinate grows towards the right
-                        // y coordinate grows towards the bottom
-                        x: (currentAccountButton.x + 2)
-                        y: (currentAccountButton.y + Style.trayWindowHeaderHeight + 2)
+//                        // x coordinate grows towards the right
+//                        // y coordinate grows towards the bottom
+//                        x: (currentAccountButton.x + 2)
+//                        y: (currentAccountButton.y + Style.trayWindowHeaderHeight + 2)
 
-                        width: (Style.currentAccountButtonWidth - 2)
-                        height: Math.min(implicitHeight, maxMenuHeight)
-                        closePolicy: Menu.CloseOnPressOutsideParent | Menu.CloseOnEscape
-                        palette: Style.palette
+//                        width: (Style.currentAccountButtonWidth - 2)
+//                        height: Math.min(implicitHeight, maxMenuHeight)
+//                        closePolicy: Menu.CloseOnPressOutsideParent | Menu.CloseOnEscape
+//                        palette: Style.palette
 
-                        background: Rectangle {
-                            border.color: Style.menuBorder
-                            color: Style.backgroundColor
-                            radius: Style.currentAccountButtonRadius
-                        }
+//                        background: Rectangle {
+//                            border.color: Style.menuBorder
+//                            color: Style.backgroundColor
+//                            radius: Style.currentAccountButtonRadius
+//                        }
 
-                        contentItem: ScrollView {
-                            id: accMenuScrollView
-                            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+//                        contentItem: ScrollView {
+//                            id: accMenuScrollView
+//                            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
-                            data: WheelHandler {
-                                target: accMenuScrollView.contentItem
-                            }
-                            ListView {
-                                implicitHeight: contentHeight
-                                model: accountMenu.contentModel
-                                interactive: true
-                                clip: true
-                                currentIndex: accountMenu.currentIndex
-                            }
-                        }
+//                            data: WheelHandler {
+//                                target: accMenuScrollView.contentItem
+//                            }
+//                            ListView {
+//                                implicitHeight: contentHeight
+//                                model: accountMenu.contentModel
+//                                interactive: true
+//                                clip: true
+//                                currentIndex: accountMenu.currentIndex
+//                            }
+//                        }
 
-                        onClosed: {
-                            // HACK: reload account Instantiator immediately by restting it - could be done better I guess
-                            // see also onVisibleChanged above
-                            userLineInstantiator.active = false;
-                            userLineInstantiator.active = true;
-                        }
+//                        onClosed: {
+//                            // HACK: reload account Instantiator immediately by restting it - could be done better I guess
+//                            // see also onVisibleChanged above
+//                            userLineInstantiator.active = false;
+//                            userLineInstantiator.active = true;
+//                        }
 
-                        Instantiator {
-                            id: userLineInstantiator
-                            model: UserModel
-                            delegate: UserLine {
-                                onShowUserStatusSelector: {
-                                    userStatusDrawer.openUserStatusDrawer(model.index);
-                                    accountMenu.close();
-                                }
-                                onClicked: UserModel.currentUserId = model.index;
-                            }
-                            onObjectAdded: accountMenu.insertItem(index, object)
-                            onObjectRemoved: accountMenu.removeItem(object)
-                        }
+//                        Instantiator {
+//                            id: userLineInstantiator
+//                            model: UserModel
+//                            delegate: UserLine {
+//                                onShowUserStatusSelector: {
+//                                    userStatusDrawer.openUserStatusDrawer(model.index);
+//                                    accountMenu.close();
+//                                }
+//                                onClicked: UserModel.currentUserId = model.index;
+//                            }
+//                            onObjectAdded: accountMenu.insertItem(index, object)
+//                            onObjectRemoved: accountMenu.removeItem(object)
+//                        }
 
-                        MenuItem {
-                            id: addAccountButton
-                            height: Style.addAccountButtonHeight
-                            hoverEnabled: true
-                            palette: Theme.systemPalette
+//                        MenuItem {
+//                            id: addAccountButton
+//                            height: Style.addAccountButtonHeight
+//                            hoverEnabled: true
+//                            palette: Theme.systemPalette
 
-                            background: Item {
-                                height: parent.height
-                                width: parent.menu.width
-                                Rectangle {
-                                    anchors.fill: parent
-                                    anchors.margins: 1
-                                    color: parent.parent.hovered || parent.parent.visualFocus ? Style.lightHover : "transparent"
-                                }
-                            }
+//                            background: Item {
+//                                height: parent.height
+//                                width: parent.menu.width
+//                                Rectangle {
+//                                    anchors.fill: parent
+//                                    anchors.margins: 1
+//                                    color: parent.parent.hovered || parent.parent.visualFocus ? Style.lightHover : "transparent"
+//                                }
+//                            }
 
-                            RowLayout {
-                                anchors.fill: parent
-                                spacing: 0
+//                            RowLayout {
+//                                anchors.fill: parent
+//                                spacing: 0
 
-                                Image {
-                                    Layout.leftMargin: 12
-                                    verticalAlignment: Qt.AlignCenter
-                                    source: Theme.darkMode ? "qrc:///client/theme/white/add.svg" : "qrc:///client/theme/black/add.svg"
-                                    sourceSize.width: Style.headerButtonIconSize
-                                    sourceSize.height: Style.headerButtonIconSize
-                                }
-                                Label {
-                                    Layout.leftMargin: 14
-                                    text: qsTr("Add account")
-                                    color: Style.ncTextColor
-                                    font.pixelSize: Style.topLinePixelSize
-                                }
-                                // Filler on the right
-                                Item {
-                                    Layout.fillWidth: true
-                                    Layout.fillHeight: true
-                                }
-                            }
-                            onClicked: UserModel.addAccount()
+//                                Image {
+//                                    Layout.leftMargin: 12
+//                                    verticalAlignment: Qt.AlignCenter
+//                                    source: Theme.darkMode ? "qrc:///client/theme/white/add.svg" : "qrc:///client/theme/black/add.svg"
+//                                    sourceSize.width: Style.headerButtonIconSize
+//                                    sourceSize.height: Style.headerButtonIconSize
+//                                }
+//                                Label {
+//                                    Layout.leftMargin: 14
+//                                    text: qsTr("Add account")
+//                                    color: Style.ncTextColor
+//                                    font.pixelSize: Style.topLinePixelSize
+//                                }
+//                                // Filler on the right
+//                                Item {
+//                                    Layout.fillWidth: true
+//                                    Layout.fillHeight: true
+//                                }
+//                            }
+//                            onClicked: UserModel.addAccount()
 
-                            Accessible.role: Accessible.MenuItem
-                            Accessible.name: qsTr("Add new account")
-                            Accessible.onPressAction: addAccountButton.clicked()
-                        }
+//                            Accessible.role: Accessible.MenuItem
+//                            Accessible.name: qsTr("Add new account")
+//                            Accessible.onPressAction: addAccountButton.clicked()
+//                        }
 
-                        Rectangle {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            implicitHeight: 1
-                            color: Style.menuBorder
-                        }
+//                        Rectangle {
+//                            anchors.left: parent.left
+//                            anchors.right: parent.right
+//                            implicitHeight: 1
+//                            color: Style.menuBorder
+//                        }
 
-                        MenuItem {
-                            id: syncPauseButton
-                            font.pixelSize: Style.topLinePixelSize
-                            palette.windowText: Style.ncTextColor
-                            hoverEnabled: true
-                            onClicked: Systray.syncIsPaused = !Systray.syncIsPaused
+//                        MenuItem {
+//                            id: syncPauseButton
+//                            font.pixelSize: Style.topLinePixelSize
+//                            palette.windowText: Style.ncTextColor
+//                            hoverEnabled: true
+//                            onClicked: Systray.syncIsPaused = !Systray.syncIsPaused
 
-                            background: Item {
-                                height: parent.height
-                                width: parent.menu.width
-                                Rectangle {
-                                    anchors.fill: parent
-                                    anchors.margins: 1
-                                    color: parent.parent.hovered || parent.parent.visualFocus ? Style.lightHover : "transparent"
-                                }
-                            }
+//                            background: Item {
+//                                height: parent.height
+//                                width: parent.menu.width
+//                                Rectangle {
+//                                    anchors.fill: parent
+//                                    anchors.margins: 1
+//                                    color: parent.parent.hovered || parent.parent.visualFocus ? Style.lightHover : "transparent"
+//                                }
+//                            }
 
-                            Accessible.role: Accessible.MenuItem
-                            Accessible.name: Systray.syncIsPaused ? qsTr("Resume sync for all") : qsTr("Pause sync for all")
-                            Accessible.onPressAction: syncPauseButton.clicked()
-                        }
+//                            Accessible.role: Accessible.MenuItem
+//                            Accessible.name: Systray.syncIsPaused ? qsTr("Resume sync for all") : qsTr("Pause sync for all")
+//                            Accessible.onPressAction: syncPauseButton.clicked()
+//                        }
 
-                        MenuItem {
-                            id: settingsButton
-                            text: qsTr("Settings")
-                            font.pixelSize: Style.topLinePixelSize
-                            palette.windowText: Style.ncTextColor
-                            hoverEnabled: true
-                            onClicked: Systray.openSettings()
+//                        MenuItem {
+//                            id: settingsButton
+//                            text: qsTr("Settings")
+//                            font.pixelSize: Style.topLinePixelSize
+//                            palette.windowText: Style.ncTextColor
+//                            hoverEnabled: true
+//                            onClicked: Systray.openSettings()
 
-                            background: Item {
-                                height: parent.height
-                                width: parent.menu.width
-                                Rectangle {
-                                    anchors.fill: parent
-                                    anchors.margins: 1
-                                    color: parent.parent.hovered || parent.parent.visualFocus ? Style.lightHover : "transparent"
-                                }
-                            }
+//                            background: Item {
+//                                height: parent.height
+//                                width: parent.menu.width
+//                                Rectangle {
+//                                    anchors.fill: parent
+//                                    anchors.margins: 1
+//                                    color: parent.parent.hovered || parent.parent.visualFocus ? Style.lightHover : "transparent"
+//                                }
+//                            }
 
-                            Accessible.role: Accessible.MenuItem
-                            Accessible.name: text
-                            Accessible.onPressAction: settingsButton.clicked()
-                        }
+//                            Accessible.role: Accessible.MenuItem
+//                            Accessible.name: text
+//                            Accessible.onPressAction: settingsButton.clicked()
+//                        }
 
-                        MenuItem {
-                            id: exitButton
-                            text: qsTr("Exit");
-                            font.pixelSize: Style.topLinePixelSize
-                            palette.windowText: Style.ncTextColor
-                            hoverEnabled: true
-                            onClicked: Systray.shutdown()
+//                        MenuItem {
+//                            id: exitButton
+//                            text: qsTr("Exit");
+//                            font.pixelSize: Style.topLinePixelSize
+//                            palette.windowText: Style.ncTextColor
+//                            hoverEnabled: true
+//                            onClicked: Systray.shutdown()
 
-                            background: Item {
-                                height: parent.height
-                                width: parent.menu.width
-                                Rectangle {
-                                    anchors.fill: parent
-                                    anchors.margins: 1
-                                    color: parent.parent.hovered || parent.parent.visualFocus ? Style.lightHover : "transparent"
-                                }
-                            }
+//                            background: Item {
+//                                height: parent.height
+//                                width: parent.menu.width
+//                                Rectangle {
+//                                    anchors.fill: parent
+//                                    anchors.margins: 1
+//                                    color: parent.parent.hovered || parent.parent.visualFocus ? Style.lightHover : "transparent"
+//                                }
+//                            }
 
-                            Accessible.role: Accessible.MenuItem
-                            Accessible.name: text
-                            Accessible.onPressAction: exitButton.clicked()
-                        }
-                    }
+//                            Accessible.role: Accessible.MenuItem
+//                            Accessible.name: text
+//                            Accessible.onPressAction: exitButton.clicked()
+//                        }
+//                    }
 
                     background: Rectangle {
                         color: parent.hovered || parent.visualFocus ? UserModel.currentUser.headerTextColor : "transparent"
@@ -499,23 +486,6 @@ ApplicationWindow {
                                 }
                             }
                         }
-
-                        ColorOverlay {
-                            cached: true
-                            color: UserModel.currentUser.headerTextColor
-                            width: source.width
-                            height: source.height
-                            source: Image {
-                                Layout.alignment: Qt.AlignRight
-                                verticalAlignment: Qt.AlignCenter
-                                Layout.margins: Style.accountDropDownCaretMargin
-                                source: "qrc:///client/theme/white/caret-down.svg"
-                                sourceSize.width: Style.accountDropDownCaretSize
-                                sourceSize.height: Style.accountDropDownCaretSize
-                                Accessible.role: Accessible.PopupMenu
-                                Accessible.name: qsTr("Account switcher and settings menu")
-                            }
-                        }
                     }
                 }
 
@@ -614,64 +584,64 @@ ApplicationWindow {
                     Accessible.name: qsTr("More apps")
                     Accessible.onPressAction: trayWindowAppsButton.clicked()
 
-                    Menu {
-                        id: appsMenu
-                        x: -2
-                        y: (trayWindowAppsButton.y + trayWindowAppsButton.height + 2)
-                        width: Style.trayWindowWidth * 0.35
-                        height: implicitHeight + y > Style.trayWindowHeight ? Style.trayWindowHeight - y : implicitHeight
-                        closePolicy: Menu.CloseOnPressOutsideParent | Menu.CloseOnEscape
+//                    Menu {
+//                        id: appsMenu
+//                        x: -2
+//                        y: (trayWindowAppsButton.y + trayWindowAppsButton.height + 2)
+//                        width: Style.trayWindowWidth * 0.35
+//                        height: implicitHeight + y > Style.trayWindowHeight ? Style.trayWindowHeight - y : implicitHeight
+//                        closePolicy: Menu.CloseOnPressOutsideParent | Menu.CloseOnEscape
 
-                        background: Rectangle {
-                            border.color: Style.menuBorder
-                            color: Style.backgroundColor
-                            radius: 2
-                        }
+//                        background: Rectangle {
+//                            border.color: Style.menuBorder
+//                            color: Style.backgroundColor
+//                            radius: 2
+//                        }
 
-                        contentItem: ScrollView {
-                            id: appsMenuScrollView
-                            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+//                        contentItem: ScrollView {
+//                            id: appsMenuScrollView
+//                            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
-                            data: WheelHandler {
-                                target: appsMenuScrollView.contentItem
-                            }
-                            ListView {
-                                id: appsMenuListView
-                                implicitHeight: contentHeight
-                                model: UserAppsModel
-                                interactive: true
-                                clip: true
-                                currentIndex: appsMenu.currentIndex
-                                delegate: MenuItem {
-                                    id: appEntry
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
+//                            data: WheelHandler {
+//                                target: appsMenuScrollView.contentItem
+//                            }
+//                            ListView {
+//                                id: appsMenuListView
+//                                implicitHeight: contentHeight
+//                                model: UserAppsModel
+//                                interactive: true
+//                                clip: true
+//                                currentIndex: appsMenu.currentIndex
+//                                delegate: MenuItem {
+//                                    id: appEntry
+//                                    anchors.left: parent.left
+//                                    anchors.right: parent.right
 
-                                    text: model.appName
-                                    font.pixelSize: Style.topLinePixelSize
-                                    palette.windowText: Style.ncTextColor
-                                    icon.source: model.appIconUrl
-                                    icon.color: Style.ncTextColor
-                                    onTriggered: UserAppsModel.openAppUrl(appUrl)
-                                    hoverEnabled: true
+//                                    text: model.appName
+//                                    font.pixelSize: Style.topLinePixelSize
+//                                    palette.windowText: Style.ncTextColor
+//                                    icon.source: model.appIconUrl
+//                                    icon.color: Style.ncTextColor
+//                                    onTriggered: UserAppsModel.openAppUrl(appUrl)
+//                                    hoverEnabled: true
 
-                                    background: Item {
-                                        height: parent.height
-                                        width: parent.width
-                                        Rectangle {
-                                            anchors.fill: parent
-                                            anchors.margins: 1
-                                            color: parent.parent.hovered || parent.parent.visualFocus ? Style.lightHover : "transparent"
-                                        }
-                                    }
+//                                    background: Item {
+//                                        height: parent.height
+//                                        width: parent.width
+//                                        Rectangle {
+//                                            anchors.fill: parent
+//                                            anchors.margins: 1
+//                                            color: parent.parent.hovered || parent.parent.visualFocus ? Style.lightHover : "transparent"
+//                                        }
+//                                    }
 
-                                    Accessible.role: Accessible.MenuItem
-                                    Accessible.name: qsTr("Open %1 in browser").arg(model.appName)
-                                    Accessible.onPressAction: appEntry.triggered()
-                                }
-                            }
-                        }
-                    }
+//                                    Accessible.role: Accessible.MenuItem
+//                                    Accessible.name: qsTr("Open %1 in browser").arg(model.appName)
+//                                    Accessible.onPressAction: appEntry.triggered()
+//                                }
+//                            }
+//                        }
+//                    }
                 }
             }
         }   // Rectangle trayWindowHeaderBackground

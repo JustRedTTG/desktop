@@ -52,9 +52,6 @@ void warnSystray()
 
 int main(int argc, char **argv)
 {
-    qputenv("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu --no-sandbox");
-    QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
-
 #ifdef Q_OS_WIN
     SetDllDirectory(L"");
 #endif
@@ -66,12 +63,8 @@ int main(int argc, char **argv)
     // the platformtheme plugin won't try to force qqc2-desktops-style
     // anymore.
     // Can be removed once the bug in qqc2-desktop-style is gone.
-    QQuickStyle::setStyle("Default");
+//    QQuickStyle::setStyle("Default");
 
-    // OpenSSL 1.1.0: No explicit initialisation or de-initialisation is necessary.
-
-    QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling, true);
 #ifdef Q_OS_MAC
     Mac::CocoaInitializer cocoaInit; // RIIA
 #endif

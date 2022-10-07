@@ -142,95 +142,95 @@ AbstractButton {
                 color: userMoreButton.hovered || userMoreButton.visualFocus ? Style.lightHover : "transparent"
             }
 
-            AutoSizingMenu {
-                id: userMoreButtonMenu
-                closePolicy: Menu.CloseOnPressOutsideParent | Menu.CloseOnEscape
+//            AutoSizingMenu {
+//                id: userMoreButtonMenu
+//                closePolicy: Menu.CloseOnPressOutsideParent | Menu.CloseOnEscape
 
-                background: Rectangle {
-                    border.color: Style.menuBorder
-                    color: Style.backgroundColor
-                    radius: 2
-                }
+//                background: Rectangle {
+//                    border.color: Style.menuBorder
+//                    color: Style.backgroundColor
+//                    radius: 2
+//                }
 
-                MenuItem {
-                    visible: model.isConnected && model.serverHasUserStatus
-                    height: visible ? implicitHeight : 0
-                    text: qsTr("Set status")
-                    font.pixelSize: Style.topLinePixelSize
-                    palette.windowText: Style.ncTextColor
-                    hoverEnabled: true
-                    onClicked: showUserStatusSelector(index)
+//                MenuItem {
+//                    visible: model.isConnected && model.serverHasUserStatus
+//                    height: visible ? implicitHeight : 0
+//                    text: qsTr("Set status")
+//                    font.pixelSize: Style.topLinePixelSize
+//                    palette.windowText: Style.ncTextColor
+//                    hoverEnabled: true
+//                    onClicked: showUserStatusSelector(index)
 
-                    background: Item {
-                        height: parent.height
-                        width: parent.menu.width
-                        Rectangle {
-                            anchors.fill: parent
-                            anchors.margins: 1
-                            color: parent.parent.hovered ? Style.lightHover : "transparent"
-                        }
-                    }
-                }
+//                    background: Item {
+//                        height: parent.height
+//                        width: parent.menu.width
+//                        Rectangle {
+//                            anchors.fill: parent
+//                            anchors.margins: 1
+//                            color: parent.parent.hovered ? Style.lightHover : "transparent"
+//                        }
+//                    }
+//                }
 
-                MenuItem {
-                    text: model.isConnected ? qsTr("Log out") : qsTr("Log in")
-                    font.pixelSize: Style.topLinePixelSize
-                    palette.windowText: Style.ncTextColor
-                    hoverEnabled: true
-                    onClicked: {
-                        model.isConnected ? UserModel.logout(index) : UserModel.login(index)
-                        accountMenu.close()
-                    }
+//                MenuItem {
+//                    text: model.isConnected ? qsTr("Log out") : qsTr("Log in")
+//                    font.pixelSize: Style.topLinePixelSize
+//                    palette.windowText: Style.ncTextColor
+//                    hoverEnabled: true
+//                    onClicked: {
+//                        model.isConnected ? UserModel.logout(index) : UserModel.login(index)
+//                        accountMenu.close()
+//                    }
 
-                    background: Item {
-                        height: parent.height
-                        width: parent.menu.width
-                        Rectangle {
-                            anchors.fill: parent
-                            anchors.margins: 1
-                            color: parent.parent.hovered ? Style.lightHover : "transparent"
-                        }
-                    }
+//                    background: Item {
+//                        height: parent.height
+//                        width: parent.menu.width
+//                        Rectangle {
+//                            anchors.fill: parent
+//                            anchors.margins: 1
+//                            color: parent.parent.hovered ? Style.lightHover : "transparent"
+//                        }
+//                    }
 
-                    Accessible.role: Accessible.Button
-                    Accessible.name: model.isConnected ? qsTr("Log out") : qsTr("Log in")
+//                    Accessible.role: Accessible.Button
+//                    Accessible.name: model.isConnected ? qsTr("Log out") : qsTr("Log in")
 
-                    onPressed: {
-                        if (model.isConnected) {
-                            UserModel.logout(index)
-                        } else {
-                            UserModel.login(index)
-                        }
-                        accountMenu.close()
-                    }
-                }
+//                    onPressed: {
+//                        if (model.isConnected) {
+//                            UserModel.logout(index)
+//                        } else {
+//                            UserModel.login(index)
+//                        }
+//                        accountMenu.close()
+//                    }
+//                }
 
-                MenuItem {
-                    id: removeAccountButton
-                    text: qsTr("Remove account")
-                    font.pixelSize: Style.topLinePixelSize
-                    palette.windowText: Style.ncTextColor
-                    hoverEnabled: true
-                    onClicked: {
-                        UserModel.removeAccount(index)
-                        accountMenu.close()
-                    }
+//                MenuItem {
+//                    id: removeAccountButton
+//                    text: qsTr("Remove account")
+//                    font.pixelSize: Style.topLinePixelSize
+//                    palette.windowText: Style.ncTextColor
+//                    hoverEnabled: true
+//                    onClicked: {
+//                        UserModel.removeAccount(index)
+//                        accountMenu.close()
+//                    }
 
-                    background: Item {
-                        height: parent.height
-                        width: parent.menu.width
-                        Rectangle {
-                            anchors.fill: parent
-                            anchors.margins: 1
-                            color: parent.parent.hovered ? Style.lightHover : "transparent"
-                        }
-                    }
+//                    background: Item {
+//                        height: parent.height
+//                        width: parent.menu.width
+//                        Rectangle {
+//                            anchors.fill: parent
+//                            anchors.margins: 1
+//                            color: parent.parent.hovered ? Style.lightHover : "transparent"
+//                        }
+//                    }
 
-                    Accessible.role: Accessible.Button
-                    Accessible.name: text
-                    Accessible.onPressAction: removeAccountButton.clicked()
-                }
-            }
+//                    Accessible.role: Accessible.Button
+//                    Accessible.name: text
+//                    Accessible.onPressAction: removeAccountButton.clicked()
+//                }
+//            }
         }
     }
 }   // MenuItem userLine

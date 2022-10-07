@@ -516,7 +516,7 @@ void SyncEngine::startSync()
         qCInfo(lcEngine) << "Sync with existing sync journal";
     }
 
-    QString verStr("Using Qt ");
+    QString verStr("Using Qt${QT_VERSION_MAJOR} ");
     verStr.append(qVersion());
 
     verStr.append(" SSL library ").append(QSslSocket::sslLibraryVersionString().toUtf8().data());

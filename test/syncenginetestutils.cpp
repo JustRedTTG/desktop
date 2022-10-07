@@ -979,31 +979,31 @@ QNetworkReply *FakeQNAM::createRequest(QNetworkAccessManager::Operation op, cons
         FileInfo &info = isUpload ? _uploadFileInfo : _remoteRootFileInfo;
 
         auto verb = newRequest.attribute(QNetworkRequest::CustomVerbAttribute);
-        if (verb == QLatin1String("PROPFIND")) {
+        if (verb == QByteArray("PROPFIND")) {
             // Ignore outgoingData always returning somethign good enough, works for now.
             reply = new FakePropfindReply { info, op, newRequest, this };
-        } else if (verb == QLatin1String("GET") || op == QNetworkAccessManager::GetOperation) {
+        } else if (verb == QByteArray("GET") || op == QNetworkAccessManager::GetOperation) {
             reply = new FakeGetReply { info, op, newRequest, this };
-        } else if (verb == QLatin1String("PUT") || op == QNetworkAccessManager::PutOperation) {
+        } else if (verb == QByteArray("PUT") || op == QNetworkAccessManager::PutOperation) {
             if (request.hasRawHeader(QByteArrayLiteral("X-OC-Mtime")) &&
                     request.rawHeader(QByteArrayLiteral("X-OC-Mtime")).toLongLong() <= 0) {
                 reply = new FakeErrorReply { op, request, this, 500 };
             } else {
                 reply = new FakePutReply { info, op, newRequest, outgoingData->readAll(), this };
             }
-        } else if (verb == QLatin1String("MKCOL")) {
+        } else if (verb == QByteArray("MKCOL")) {
             reply = new FakeMkcolReply { info, op, newRequest, this };
-        } else if (verb == QLatin1String("DELETE") || op == QNetworkAccessManager::DeleteOperation) {
+        } else if (verb == QByteArray("DELETE") || op == QNetworkAccessManager::DeleteOperation) {
             reply = new FakeDeleteReply { info, op, newRequest, this };
-        } else if (verb == QLatin1String("MOVE") && !isUpload) {
+        } else if (verb == QByteArray("MOVE") && !isUpload) {
             reply = new FakeMoveReply { info, op, newRequest, this };
-        } else if (verb == QLatin1String("MOVE") && isUpload) {
+        } else if (verb == QByteArray("MOVE") && isUpload) {
             reply = new FakeChunkMoveReply { info, _remoteRootFileInfo, op, newRequest, this };
-        } else if (verb == QLatin1String("POST") || op == QNetworkAccessManager::PostOperation) {
+        } else if (verb == QByteArray("POST") || op == QNetworkAccessManager::PostOperation) {
             if (contentType.startsWith(QStringLiteral("multipart/related; boundary="))) {
                 reply = new FakePutMultiFileReply { info, op, newRequest, contentType, outgoingData->readAll(), this };
             }
-        } else if (verb == QLatin1String("LOCK") || verb == QLatin1String("UNLOCK")) {
+        } else if (verb == QByteArray("LOCK") || verb == QByteArray("UNLOCK")) {
             reply = new FakeFileLockReply{info, op, newRequest, this};
         } else {
             qDebug() << verb << outgoingData;

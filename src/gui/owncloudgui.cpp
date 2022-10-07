@@ -58,6 +58,7 @@
 #include <QQmlApplicationEngine>
 #include <QQuickItem>
 #include <QQmlContext>
+#include <QMetaType>
 
 namespace OCC {
 
@@ -128,8 +129,6 @@ ownCloudGui::ownCloudGui(Application *parent)
 
     qmlRegisterUncreatableType<UnifiedSearchResultsListModel>("com.nextcloud.desktopclient", 1, 0, "UnifiedSearchResultsListModel", "UnifiedSearchResultsListModel");
     qmlRegisterUncreatableType<UserStatus>("com.nextcloud.desktopclient", 1, 0, "UserStatus", "Access to Status enum");
-
-    qRegisterMetaTypeStreamOperators<Emoji>();
 
     qRegisterMetaType<ActivityListModel *>("ActivityListModel*");
     qRegisterMetaType<UnifiedSearchResultsListModel *>("UnifiedSearchResultsListModel*");

@@ -83,7 +83,7 @@ void Logger::postGuiMessage(const QString &title, const QString &message)
 bool Logger::isLoggingToFile() const
 {
     QMutexLocker lock(&_mutex);
-    return _logstream;
+    return static_cast<bool>(_logstream);
 }
 
 void Logger::doLog(QtMsgType type, const QMessageLogContext &ctx, const QString &message)
@@ -179,7 +179,6 @@ void Logger::setLogFile(const QString &name)
     }
 
     _logstream.reset(new QTextStream(&_logFile));
-    _logstream->setCodec(QTextCodec::codecForName("UTF-8"));
 }
 
 void Logger::setLogExpire(int expire)

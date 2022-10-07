@@ -498,7 +498,7 @@ QString Theme::gitSHA1() const
     const QString gitSha1(QLatin1String(GIT_SHA1));
     devString = QCoreApplication::translate("nextcloudTheme::about()",
         "<p><small>Built from Git revision <a href=\"%1\">%2</a>"
-        " on %3, %4 using Qt %5, %6</small></p>")
+        " on %3, %4 using Qt${QT_VERSION_MAJOR} %5, %6</small></p>")
                     .arg(githubPrefix + gitSha1)
                     .arg(gitSha1.left(6))
                     .arg(__DATE__)
@@ -769,7 +769,7 @@ QString Theme::versionSwitchOutput() const
 #ifdef GIT_SHA1
     stream << "Git revision " << GIT_SHA1 << Qt::endl;
 #endif
-    stream << "Using Qt " << qVersion() << ", built against Qt " << QT_VERSION_STR << Qt::endl;
+    stream << "Using Qt${QT_VERSION_MAJOR} " << qVersion() << ", built against Qt${QT_VERSION_MAJOR} " << QT_VERSION_STR << Qt::endl;
 
     if(!QGuiApplication::platformName().isEmpty())
         stream << "Using Qt platform plugin '" << QGuiApplication::platformName() << "'" << Qt::endl;

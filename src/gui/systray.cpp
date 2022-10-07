@@ -112,7 +112,8 @@ void Systray::create()
             _trayEngine->rootContext()->setContextProperty("activityModel", UserModel::instance()->currentActivityModel());
         }
 
-        QQmlComponent trayWindowComponent(_trayEngine, QStringLiteral("qrc:/qml/src/gui/tray/Window.qml"));
+        _trayEngine->addImportPath(QStringLiteral(":/"));
+        QQmlComponent trayWindowComponent(_trayEngine, QStringLiteral("com/nextcloud/desktopclient/Window.qml"));
 
         if(trayWindowComponent.isError()) {
             qCWarning(lcSystray) << trayWindowComponent.errorString();

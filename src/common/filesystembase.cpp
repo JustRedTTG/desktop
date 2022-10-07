@@ -326,7 +326,7 @@ bool FileSystem::fileExists(const QString &filename, const QFileInfo &fileInfo)
 #ifdef Q_OS_WIN
 QString FileSystem::fileSystemForPath(const QString &path)
 {
-    // See also QStorageInfo (Qt >=5.4) and GetVolumeInformationByHandleW (>= Vista)
+    // See also QStorageInfo (Qt${QT_VERSION_MAJOR} >=5.4) and GetVolumeInformationByHandleW (>= Vista)
     QString drive = path.left(2);
     if (!drive.endsWith(QLatin1Char(':')))
         return QString();

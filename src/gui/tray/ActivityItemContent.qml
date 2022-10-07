@@ -3,7 +3,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.3
 import QtQuick.Layouts 1.2
 import Style 1.0
-import QtGraphicalEffects 1.15
+import Qt5Compat.GraphicalEffects
 import com.nextcloud.desktopclient 1.0
 
 RowLayout {

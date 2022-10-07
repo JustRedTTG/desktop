@@ -1,6 +1,7 @@
 project(gui)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Svg Qml Quick QuickControls2 Xml Network)
-find_package(KF5Archive REQUIRED)
+
+set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml)
 
 if(QUICK_COMPILER)
     if (${QT_VERSION_MAJOR} STREQUAL "6")
@@ -357,10 +358,6 @@ set( final_src
     ${3rdparty_MOC}
 )
 
-if(Qt5Keychain_FOUND)
-    list(APPEND libsync_LINK_TARGETS qt5keychain)
-endif()
-
 # add executable icon on windows and osx
 include(GenerateIconsUtils)
 
@@ -519,7 +516,6 @@ target_link_libraries(nextcloudCore
   Qt::Qml
   Qt::Quick
   Qt::QuickControls2
-  KF5::Archive
   )
 
 add_subdirectory(socketapi)
@@ -532,6 +528,71 @@ set_target_properties(nextcloudCore
   PROPERTIES
   AUTOUIC ON
   AUTOMOC ON
+)
+
+qt_add_library(desktopclientQmlStyle STATIC)
+set_target_properties(desktopclientQmlStyle
+  PROPERTIES
+  AUTOUIC ON
+  AUTOMOC ON
+)
+target_link_libraries(nextcloudCore PUBLIC desktopclientQmlStyle)
+qt_add_qml_module(desktopclientQmlStyle
+    URI Style
+    OUTPUT_DIRECTORY Style
+    VERSION 1.0
+    QML_FILES
+    ../../theme/Style/Style.qml
+)
+
+qt_add_library(desktopclientQml STATIC)
+set_target_properties(desktopclientQml
+  PROPERTIES
+  AUTOUIC ON
+  AUTOMOC ON
+)
+target_link_libraries(nextcloudCore PUBLIC desktopclientQml)
+qt_add_qml_module(desktopclientQml
+    URI com.nextcloud.desktopclient
+    OUTPUT_DIRECTORY com/nextcloud/desktopclient
+    VERSION 1.0
+    QML_FILES
+    UserStatusSelector.qml
+    UserStatusSelectorPage.qml
+    EmojiPicker.qml
+    UserStatusSelectorButton.qml
+    PredefinedStatusButton.qml
+    BasicComboBox.qml
+    ErrorBox.qml
+    tray/Window.qml
+    tray/UserLine.qml
+    tray/HeaderButton.qml
+    tray/SyncStatus.qml
+    tray/ActivityActionButton.qml
+    tray/ActivityItem.qml
+    tray/AutoSizingMenu.qml
+    tray/ActivityList.qml
+    tray/FileActivityDialog.qml
+    tray/UnifiedSearchInputContainer.qml
+    tray/UnifiedSearchResultFetchMoreTrigger.qml
+    tray/UnifiedSearchResultItem.qml
+    tray/UnifiedSearchResultItemSkeleton.qml
+    tray/UnifiedSearchResultItemSkeletonContainer.qml
+    tray/UnifiedSearchResultItemSkeletonGradientRectangle.qml
+    tray/UnifiedSearchResultListItem.qml
+    tray/UnifiedSearchResultNothingFound.qml
+    tray/UnifiedSearchResultSectionItem.qml
+    tray/CustomButton.qml
+    tray/NCButtonContents.qml
+    tray/NCButtonBackground.qml
+    tray/TextButtonContents.qml
+    tray/ActivityItemContextMenu.qml
+    tray/ActivityItemActions.qml
+    tray/ActivityItemContent.qml
+    tray/TalkReplyTextField.qml
+    tray/CallNotificationDialog.qml
+    tray/NCBusyIndicator.qml
+    tray/NCToolTip.qml
 )
 
 target_include_directories(nextcloudCore

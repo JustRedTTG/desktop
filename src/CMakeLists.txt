@@ -28,6 +28,18 @@ set_package_properties(Qt${QT_VERSION_MAJOR}Concurrent PROPERTIES
     TYPE REQUIRED
 )
 
+find_package(Qt${QT_VERSION_MAJOR}WebSockets ${REQUIRED_QT_VERSION} CONFIG QUIET)
+set_package_properties(Qt${QT_VERSION_MAJOR}WebSockets PROPERTIES
+    DESCRIPTION "Qt${QT_VERSION_MAJOR} WebSockets component."
+    TYPE REQUIRED
+)
+
+find_package(Qt${QT_VERSION_MAJOR}Core5Compat ${REQUIRED_QT_VERSION} CONFIG QUIET)
+set_package_properties(Qt${QT_VERSION_MAJOR}Core5Compat PROPERTIES
+    DESCRIPTION "Qt${QT_VERSION_MAJOR} Core5Compat component."
+    TYPE REQUIRED
+)
+
 find_package(Qt${QT_VERSION_MAJOR}WebEngineWidgets ${REQUIRED_QT_VERSION} CONFIG QUIET)
 if(APPLE)
     set_package_properties(Qt${QT_VERSION_MAJOR}WebEngineWidgets PROPERTIES

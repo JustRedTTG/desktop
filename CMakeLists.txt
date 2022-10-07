@@ -7,6 +7,7 @@ project(client)
 include(FeatureSummary)
 
 set(BIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml)
 
 include(${CMAKE_SOURCE_DIR}/NEXTCLOUD.cmake)
 
