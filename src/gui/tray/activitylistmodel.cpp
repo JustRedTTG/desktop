@@ -52,6 +52,11 @@ ActivityListModel::ActivityListModel(AccountState *accountState,
     : QAbstractListModel(parent)
     , _accountState(accountState)
 {
+    if (_accountState) {
+        connect(_accountState, &AccountState::stateChanged,
+                this, &ActivityListModel::accountStateChanged);
+        _accountStateWasConnected = false;
+    }
 }
 
 QHash<int, QByteArray> ActivityListModel::roleNames() const
@@ -92,7 +97,16 @@ QHash<int, QByteArray> ActivityListModel::roleNames() const
 
 void ActivityListModel::setAccountState(AccountState *state)
 {
+    if (_accountState == state) {
+        return;
+    }
+
     _accountState = state;
+    if (_accountState) {
+        connect(_accountState, &AccountState::stateChanged,
+                this, &ActivityListModel::accountStateChanged);
+        _accountStateWasConnected = false;
+    }
 }
 
 void ActivityListModel::setCurrentItem(const int currentItem)
@@ -543,6 +557,25 @@ void ActivityListModel::addEntriesToActivityList(const ActivityList &activityLis
         _finalList.append(activity);
     }
     endInsertRows();
+}
+
+void ActivityListModel::accountStateChanged()
+{
+    if (!_accountState) {
+        return;
+    }
+
+    if (_accountStateWasConnected == _accountState->isConnected()) {
+        return;
+    }
+
+    if (!_accountState->isConnected()) {
+        _durationSinceDisconnection.start();
+    } else {
+        _durationSinceDisconnection.invalidate();
+    }
+
+    _accountStateWasConnected = _accountState->isConnected();
 }
 
 void ActivityListModel::addErrorToActivityList(const Activity &activity)

@@ -145,6 +145,7 @@ protected slots:
 
 private slots:
     void addEntriesToActivityList(const ActivityList &activityList);
+    void accountStateChanged();
 
 private:
     static QVariantList convertLinksToMenuEntries(const Activity &activity);
@@ -183,6 +184,10 @@ private:
     bool _currentlyFetching = false;
     bool _doneFetching = false;
     bool _hideOldActivities = true;
+
+    bool _accountStateWasConnected = false;
+
+    QElapsedTimer _durationSinceDisconnection;
 
     static constexpr quint32 MaxActionButtons = 3;
 };
