@@ -42,6 +42,8 @@ class Account;
 class SyncJournalDb;
 class ProcessDirectoryJob;
 
+enum class ErrorCategory;
+
 /**
  * Represent all the meta-data about a file in the server
  */
@@ -287,7 +289,7 @@ public:
     QVector<QString> _filesUnscheduleSync;
 
 signals:
-    void fatalError(const QString &errorString);
+    void fatalError(const QString &errorString, ErrorCategory errorCategory);
     void itemDiscovered(const SyncFileItemPtr &item);
     void finished();
 
@@ -300,7 +302,7 @@ signals:
       */
     void silentlyExcluded(const QString &folderPath);
 
-    void addErrorToGui(SyncFileItem::Status status, const QString &errorMessage, const QString &subject);
+    void addErrorToGui(SyncFileItem::Status status, const QString &errorMessage, const QString &subject, ErrorCategory category);
 };
 
 /// Implementation of DiscoveryPhase::adjustRenamedPath

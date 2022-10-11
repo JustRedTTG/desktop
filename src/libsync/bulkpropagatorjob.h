@@ -82,7 +82,8 @@ private slots:
     // invoked on internal error to unlock a folder and faile
     void slotOnErrorStartFolderUnlock(SyncFileItemPtr item,
                                       SyncFileItem::Status status,
-                                      const QString &errorString);
+                                      const QString &errorString,
+                                      ErrorCategory errorCategory);
 
     void slotPutFinished();
 
@@ -108,7 +109,8 @@ private:
 
     void done(SyncFileItemPtr item,
               SyncFileItem::Status status,
-              const QString &errorString);
+              const QString &errorString,
+              ErrorCategory category);
 
     /** Bases headers that need to be sent on the PUT, or in the MOVE for chunking-ng */
     [[nodiscard]] QMap<QByteArray, QByteArray> headers(SyncFileItemPtr item) const;

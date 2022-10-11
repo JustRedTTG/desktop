@@ -1431,7 +1431,7 @@ void FolderMan::editFileLocally(const QString &userId, const QString &relPath, c
             });
 
             if (foundFolder != std::cend(map())) {
-                (*foundFolder)->syncEngine().addErrorToGui(SyncFileItem::SoftError, errorMessage, subject);
+                (*foundFolder)->syncEngine().addErrorToGui(SyncFileItem::SoftError, errorMessage, subject, ErrorCategory::GenericError);
             }
         }
 

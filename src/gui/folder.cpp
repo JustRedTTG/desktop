@@ -844,7 +844,7 @@ void Folder::startSync(const QStringList &pathList)
     _fileLog->start(path());
 
     if (!reloadExcludes()) {
-        slotSyncError(tr("Could not read system exclude file"));
+        slotSyncError(tr("Could not read system exclude file"), ErrorCategory::GenericError);
         QMetaObject::invokeMethod(this, "slotSyncFinished", Qt::QueuedConnection, Q_ARG(bool, false));
         return;
     }
@@ -952,9 +952,9 @@ void Folder::slotSyncError(const QString &message, ErrorCategory category)
     emit ProgressDispatcher::instance()->syncError(alias(), message, category);
 }
 
-void Folder::slotAddErrorToGui(SyncFileItem::Status status, const QString &errorMessage, const QString &subject)
+void Folder::slotAddErrorToGui(SyncFileItem::Status status, const QString &errorMessage, const QString &subject, ErrorCategory category)
 {
-    emit ProgressDispatcher::instance()->addErrorToGui(alias(), status, errorMessage, subject);
+    emit ProgressDispatcher::instance()->addErrorToGui(alias(), status, errorMessage, subject, category);
 }
 
 void Folder::slotSyncStarted()
@@ -1072,7 +1072,7 @@ void Folder::slotTransmissionProgress(const ProgressInfo &pi)
 }
 
 // a item is completed: count the errors and forward to the ProgressDispatcher
-void Folder::slotItemCompleted(const SyncFileItemPtr &item)
+void Folder::slotItemCompleted(const SyncFileItemPtr &item, ErrorCategory errorCategory)
 {
     if (item->_instruction == CSYNC_INSTRUCTION_NONE || item->_instruction == CSYNC_INSTRUCTION_UPDATE_METADATA) {
         // We only care about the updates that deserve to be shown in the UI
@@ -1082,7 +1082,7 @@ void Folder::slotItemCompleted(const SyncFileItemPtr &item)
     _syncResult.processCompletedItem(item);
 
     _fileLog->logItem(*item);
-    emit ProgressDispatcher::instance()->itemCompleted(alias(), item);
+    emit ProgressDispatcher::instance()->itemCompleted(alias(), item, errorCategory);
 }
 
 void Folder::slotNewBigFolderDiscovered(const QString &newF, bool isExternal)

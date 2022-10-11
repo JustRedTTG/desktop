@@ -152,14 +152,14 @@ signals:
     void aboutToPropagate(SyncFileItemVector &);
 
     // after each item completed by a job (successful or not)
-    void itemCompleted(const SyncFileItemPtr &);
+    void itemCompleted(const SyncFileItemPtr &item, ErrorCategory category);
 
     void transmissionProgress(const ProgressInfo &progress);
 
     /// We've produced a new sync error of a type.
-    void syncError(const QString &message, ErrorCategory category = ErrorCategory::Normal);
+    void syncError(const QString &message, ErrorCategory category);
 
-    void addErrorToGui(SyncFileItem::Status status, const QString &errorMessage, const QString &subject);
+    void addErrorToGui(SyncFileItem::Status status, const QString &errorMessage, const QString &subject, ErrorCategory category);
 
     void finished(bool success);
     void started();
@@ -195,11 +195,11 @@ private slots:
      */
     void slotNewItem(const SyncFileItemPtr &item);
 
-    void slotItemCompleted(const SyncFileItemPtr &item);
+    void slotItemCompleted(const SyncFileItemPtr &item, ErrorCategory category);
     void slotDiscoveryFinished();
     void slotPropagationFinished(bool success);
     void slotProgress(const SyncFileItem &item, qint64 curent);
-    void slotCleanPollsJobAborted(const QString &error);
+    void slotCleanPollsJobAborted(const QString &error, ErrorCategory errorCategory);
 
     /** Records that a file was touched by a job. */
     void slotAddTouchedFile(const QString &fn);

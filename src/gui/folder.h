@@ -374,12 +374,12 @@ private slots:
 
     /** Adds a error message that's not tied to a specific item.
      */
-    void slotSyncError(const QString &message, ErrorCategory category = ErrorCategory::Normal);
+    void slotSyncError(const QString &message, ErrorCategory category);
 
-    void slotAddErrorToGui(SyncFileItem::Status status, const QString &errorMessage, const QString &subject = {});
+    void slotAddErrorToGui(SyncFileItem::Status status, const QString &errorMessage, const QString &subject, ErrorCategory category);
 
     void slotTransmissionProgress(const ProgressInfo &pi);
-    void slotItemCompleted(const SyncFileItemPtr &);
+    void slotItemCompleted(const SyncFileItemPtr &, ErrorCategory errorCategory);
 
     void slotRunEtagJob();
     void etagRetrieved(const QByteArray &, const QDateTime &tp);

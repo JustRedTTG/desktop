@@ -578,9 +578,9 @@ void ActivityListModel::accountStateChanged()
     _accountStateWasConnected = _accountState->isConnected();
 }
 
-void ActivityListModel::addErrorToActivityList(const Activity &activity)
+void ActivityListModel::addErrorToActivityList(const Activity &activity, ErrorType type)
 {
-    qCInfo(lcActivity) << "Error successfully added to the notification list: " << activity._message << activity._subject;
+    qCInfo(lcActivity) << "Error successfully added to the notification list: " << activity._message << activity._subject << type;
     addEntriesToActivityList({activity});
     _notificationErrorsLists.prepend(activity);
 }
