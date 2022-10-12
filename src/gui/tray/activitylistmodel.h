@@ -118,7 +118,7 @@ public slots:
     void slotTriggerDismiss(const int activityIndex);
 
     void addNotificationToActivityList(const Activity &activity);
-    void addErrorToActivityList(const Activity &activity, ErrorType type);
+    void addErrorToActivityList(const Activity &activity, ErrorType type = ErrorType::SyncError);
     void addIgnoredFileToList(const Activity &newActivity);
     void addSyncFileItemToActivityList(const Activity &activity);
     void removeActivityFromActivityList(int row);

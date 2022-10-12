@@ -580,9 +580,25 @@ void ActivityListModel::accountStateChanged()
 
 void ActivityListModel::addErrorToActivityList(const Activity &activity, ErrorType type)
 {
-    qCInfo(lcActivity) << "Error successfully added to the notification list: " << activity._message << activity._subject << type;
-    addEntriesToActivityList({activity});
-    _notificationErrorsLists.prepend(activity);
+    bool shouldAddError = false;
+
+    switch (type)
+    {
+    case ErrorType::NetworkError:
+        if (_durationSinceDisconnection.isValid() && _durationSinceDisconnection.hasExpired(3 * 60 *1000)) {
+            shouldAddError = true;
+        }
+        break;
+    case ErrorType::SyncError:
+        shouldAddError = true;
+        break;
+    }
+
+    if (shouldAddError) {
+        qCInfo(lcActivity) << "Error successfully added to the notification list: " << activity._message << activity._subject << type;
+        addEntriesToActivityList({activity});
+        _notificationErrorsLists.prepend(activity);
+    }
 }
 
 void ActivityListModel::addIgnoredFileToList(const Activity &newActivity)
