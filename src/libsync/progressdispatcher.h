@@ -27,7 +27,7 @@
 
 namespace OCC {
 
-Q_NAMESPACE
+OCSYNC_EXPORT Q_NAMESPACE
 
 /**
  * @brief The ProgressInfo class

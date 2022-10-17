@@ -21,7 +21,7 @@
 
 namespace OCC {
 
-Q_NAMESPACE
+OCSYNC_EXPORT Q_NAMESPACE
 
 /** Determines whether items should be available locally permanently or not
  *
