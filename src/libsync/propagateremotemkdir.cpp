@@ -163,10 +163,7 @@ void PropagateRemoteMkdir::finalizeMkColJob(QNetworkReply::NetworkError err, con
         }
     });
     connect(propfindJob, &PropfindJob::finishedWithError, this, [this] (QNetworkReply *reply) {
-        auto err = QNetworkReply::NetworkError::UnknownNetworkError;
-        if (reply) {
-            err = reply->error();
-        }
+        auto err = reply ? reply->error() : QNetworkReply::NetworkError::UnknownNetworkError;
         // ignore the PROPFIND error
         propagator()->_activeJobList.removeOne(this);
         done(SyncFileItem::NormalError, {}, errorCategoryFromNetworkError(err));

@@ -829,11 +829,7 @@ void PropagateDownloadFile::slotGetFinished()
                 &propagator()->_anotherSyncNeeded, errorBody);
         }
 
-        if (err == QNetworkReply::RemoteHostClosedError || err == QNetworkReply::TemporaryNetworkFailureError) {
-            errorCategory = ErrorCategory::NetworkError;
-        }
-
-        done(status, errorString, errorCategory);
+        done(status, errorString, errorCategoryFromNetworkError(err));
         return;
     }
 
