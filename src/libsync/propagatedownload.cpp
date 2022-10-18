@@ -762,7 +762,6 @@ void PropagateDownloadFile::slotGetFinished()
 
     QNetworkReply::NetworkError err = job->reply()->error();
     if (err != QNetworkReply::NoError) {
-        auto errorCategory = ErrorCategory::GenericError;
         // If we sent a 'Range' header and get 416 back, we want to retry
         // without the header.
         const bool badRangeHeader = job->resumeStart() > 0 && _item->_httpErrorCode == 416;
