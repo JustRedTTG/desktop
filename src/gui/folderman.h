@@ -29,6 +29,7 @@ class TestFolderMan;
 class TestCfApiShellExtensionsIPC;
 class TestShareModel;
 class ShareTestHelper;
+class EndToEndTestHelper;
 
 namespace OCC {
 
@@ -382,6 +383,7 @@ private:
     friend class ::TestFolderMan;
     friend class ::TestCfApiShellExtensionsIPC;
     friend class ::ShareTestHelper;
+    friend class ::EndToEndTestHelper;
 };
 
 } // namespace OCC
