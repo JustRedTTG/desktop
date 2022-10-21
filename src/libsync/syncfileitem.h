@@ -311,6 +311,8 @@ public:
 
     bool _isShared = false;
     time_t _lastShareStateFetchedTimestmap = 0;
+
+    bool _isMyShare = false;
 };
 
 inline bool operator<(const SyncFileItemPtr &item1, const SyncFileItemPtr &item2)

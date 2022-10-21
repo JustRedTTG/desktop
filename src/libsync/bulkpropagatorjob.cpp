@@ -393,7 +393,7 @@ void BulkPropagatorJob::slotPutFinishedOneFile(const BulkUploadItem &singleFile,
     singleFile._item->_etag = etag;
     singleFile._item->_fileId = getHeaderFromJsonReply(fileReply, "fileid");
     singleFile._item->_remotePerm = RemotePermissions::fromServerString(getHeaderFromJsonReply(fileReply, "permissions"));
-    singleFile._item->_isShared = singleFile._item->_remotePerm.hasPermission(RemotePermissions::IsShared);
+    singleFile._item->_isShared = singleFile._item->_remotePerm.hasPermission(RemotePermissions::IsShared) || singleFile._item->_isMyShare;
     singleFile._item->_lastShareStateFetchedTimestmap = QDateTime::currentMSecsSinceEpoch();
 
     if (getHeaderFromJsonReply(fileReply, "X-OC-MTime") != "accepted") {

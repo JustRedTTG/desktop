@@ -59,6 +59,7 @@ struct RemoteInfo
     bool isDirectory = false;
     bool isE2eEncrypted = false;
     QString e2eMangledName;
+    bool isMyShare = false;
 
     [[nodiscard]] bool isValid() const { return !name.isNull(); }
 
