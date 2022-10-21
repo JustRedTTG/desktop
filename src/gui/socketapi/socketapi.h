@@ -15,9 +15,9 @@
 #ifndef SOCKETAPI_H
 #define SOCKETAPI_H
 
-#include "syncfileitem.h"
 #include "common/syncfilestatus.h"
 #include "common/syncjournalfilerecord.h"
+#include "syncfileitem.h"
 
 #include "config.h"
 
@@ -28,8 +28,8 @@ class QLocalSocket;
 class QStringList;
 class QFileInfo;
 
-namespace OCC {
-
+namespace OCC
+{
 class SyncFileStatus;
 class Folder;
 class SocketListener;
@@ -79,8 +79,7 @@ private:
     // Helper structure for getting information on a file
     // based on its local path - used for nearly all remote
     // actions.
-    struct FileData
-    {
+    struct FileData {
         static FileData get(const QString &localFile);
         [[nodiscard]] SyncFileStatus syncFileStatus() const;
         [[nodiscard]] SyncJournalFileRecord journalRecord() const;
@@ -102,6 +101,7 @@ private:
 
     // opens share dialog, sends reply
     void processShareRequest(const QString &localFile, SocketListener *listener);
+    void processLeaveShareRequest(const QString &localFile, SocketListener *listener);
     void processFileActivityRequest(const QString &localFile);
 
     Q_INVOKABLE void command_RETRIEVE_FOLDER_STATUS(const QString &argument, OCC::SocketListener *listener);
@@ -114,6 +114,7 @@ private:
     // The context menu actions
     Q_INVOKABLE void command_ACTIVITY(const QString &localFile, OCC::SocketListener *listener);
     Q_INVOKABLE void command_SHARE(const QString &localFile, OCC::SocketListener *listener);
+    Q_INVOKABLE void command_LEAVESHARE(const QString &localFile, SocketListener *listener);
     Q_INVOKABLE void command_MANAGE_PUBLIC_LINKS(const QString &localFile, OCC::SocketListener *listener);
     Q_INVOKABLE void command_COPY_PUBLIC_LINK(const QString &localFile, OCC::SocketListener *listener);
     Q_INVOKABLE void command_COPY_PRIVATE_LINK(const QString &localFile, OCC::SocketListener *listener);
@@ -149,15 +150,13 @@ private:
     // Sends the context menu options relating to sharing to listener
     void sendSharingContextMenuOptions(const FileData &fileData, SocketListener *listener, bool enabled);
 
-    void sendLockFileCommandMenuEntries(const QFileInfo &fileInfo,
-                                        Folder * const syncFolder,
-                                        const FileData &fileData,
-                                        const SocketListener * const listener) const;
+    void
+    sendLockFileCommandMenuEntries(const QFileInfo &fileInfo, Folder *const syncFolder, const FileData &fileData, const SocketListener *const listener) const;
 
     void sendLockFileInfoMenuEntries(const QFileInfo &fileInfo,
-                                     Folder * const syncFolder,
+                                     Folder *const syncFolder,
                                      const FileData &fileData,
-                                     const SocketListener * const listener,
+                                     const SocketListener *const listener,
                                      const SyncJournalFileRecord &record) const;
 
     /** Send the list of menu item. (added in version 1.1)
@@ -171,7 +170,7 @@ private:
 
     /// Direct Editing
     Q_INVOKABLE void command_EDIT(const QString &localFile, OCC::SocketListener *listener);
-    DirectEditor* getDirectEditorForLocalFile(const QString &localFile);
+    DirectEditor *getDirectEditorForLocalFile(const QString &localFile);
 
 #if GUI_TESTING
     Q_INVOKABLE void command_ASYNC_ASSERT_ICON_IS_EQUAL(const QSharedPointer<SocketApiJob> &job);
