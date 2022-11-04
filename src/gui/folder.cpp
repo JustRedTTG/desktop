@@ -868,17 +868,24 @@ void Folder::startSync(const QStringList &pathList)
     bool periodicFullLocalDiscoveryNow =
         fullLocalDiscoveryInterval.count() >= 0 // negative means we don't require periodic full runs
         && _timeSinceLastFullLocalDiscovery.hasExpired(fullLocalDiscoveryInterval.count());
+
+    std::set<QString> setOfPaths;
+
+    for (const auto &path : pathList) {
+        setOfPaths.insert(path);
+    }
+
     if (_folderWatcher && _folderWatcher->isReliable()
         && hasDoneFullLocalDiscovery
         && !periodicFullLocalDiscoveryNow) {
         qCInfo(lcFolder) << "Allowing local discovery to read from the database";
         _engine->setLocalDiscoveryOptions(
             LocalDiscoveryStyle::DatabaseAndFilesystem,
-            _localDiscoveryTracker->localDiscoveryPaths());
+            !setOfPaths.empty() ? setOfPaths : _localDiscoveryTracker->localDiscoveryPaths());
         _localDiscoveryTracker->startSyncPartialDiscovery();
     } else {
         qCInfo(lcFolder) << "Forbidding local discovery to read from the database";
-        _engine->setLocalDiscoveryOptions(LocalDiscoveryStyle::FilesystemOnly);
+        _engine->setLocalDiscoveryOptions(LocalDiscoveryStyle::FilesystemOnly, setOfPaths);
         _localDiscoveryTracker->startSyncFullDiscovery();
     }
 

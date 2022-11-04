@@ -622,8 +622,22 @@ void SyncEngine::startSync()
     connect(_discoveryPhase.data(), &DiscoveryPhase::silentlyExcluded,
         _syncFileStatusTracker.data(), &SyncFileStatusTracker::slotAddSilentlyExcluded);
 
+    SyncFileItemPtr fileToSync;
+
+    if (!_localDiscoveryPaths.empty() && _localDiscoveryPaths.size() == 1) {
+        auto localDiscoveryPath = *_localDiscoveryPaths.begin();
+
+        SyncJournalFileRecord rec;
+        /*if (_journal->getFileRecord(localDiscoveryPath, &rec) && rec.isValid() && rec.isDirectory()) {
+            fileToSync = SyncFileItem::fromSyncJournalFileRecord(rec);
+        }*/
+    }
+
     auto discoveryJob = new ProcessDirectoryJob(
         _discoveryPhase.data(), PinState::AlwaysLocal, _journal->keyValueStoreGetInt("last_sync", 0), _discoveryPhase.data());
+    if (fileToSync) {
+        discoveryJob->_dirItem = fileToSync;
+    }
     _discoveryPhase->startJob(discoveryJob);
     connect(discoveryJob, &ProcessDirectoryJob::etag, this, &SyncEngine::slotRootEtagReceived);
     connect(_discoveryPhase.data(), &DiscoveryPhase::addErrorToGui, this, &SyncEngine::addErrorToGui);
