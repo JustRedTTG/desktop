@@ -76,6 +76,7 @@ GridLayout {
 
     property bool isLinkShare: model.shareType === ShareModel.ShareTypeLink
     property bool isPlaceholderLinkShare: model.shareType === ShareModel.ShareTypePlaceholderLink
+    property bool isInternalLinkShare: model.shareType === ShareModel.ShareTypeInternalLink
 
     property bool canCreateLinkShares: true
 
@@ -280,7 +281,7 @@ GridLayout {
             icon.width: 16
             icon.height: 16
 
-            visible: root.isLinkShare
+            visible: root.isLinkShare || root.isInternalLinkShare
             enabled: visible
 
             onClicked: {
@@ -307,7 +308,7 @@ GridLayout {
 
             imageSource: "qrc:///client/theme/more.svg"
 
-            visible: !root.isPlaceholderLinkShare
+            visible: !root.isPlaceholderLinkShare && !root.isInternalLinkShare
             enabled: visible
 
             onClicked: moreMenu.popup()
