@@ -101,6 +101,7 @@ signals:
     void shutdown();
 
     void showFileDetailsPage(const QString &fileLocalPath, const FileDetailsPage page);
+    void showFileDetails(AccountState *accountState, const QString &localPath, const FileDetailsPage fileDetailsPage);
     void sendChatMessage(const QString &token, const QString &message, const QString &replyTo);
     void showErrorMessageDialog(const QString &error);
 
@@ -138,6 +139,8 @@ public slots:
 
     void createShareDialog(const QString &localPath);
     void createFileActivityDialog(const QString &localPath);
+
+    void presentShareViewInTray(const QString &localPath);
 
 private slots:
     void slotUnpauseAllFolders();
