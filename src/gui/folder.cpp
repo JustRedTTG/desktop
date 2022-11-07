@@ -829,10 +829,8 @@ bool Folder::reloadExcludes()
     return _engine->excludedFiles().reloadExcludeFiles();
 }
 
-void Folder::startSync(const QStringList &pathList)
+void Folder::startSync(const QString &selectedFilePath)
 {
-    Q_UNUSED(pathList)
-
     if (isBusy()) {
         qCCritical(lcFolder) << "ERROR csync is still running and new sync requested.";
         return;
@@ -868,24 +866,36 @@ void Folder::startSync(const QStringList &pathList)
     bool periodicFullLocalDiscoveryNow =
         fullLocalDiscoveryInterval.count() >= 0 // negative means we don't require periodic full runs
         && _timeSinceLastFullLocalDiscovery.hasExpired(fullLocalDiscoveryInterval.count());
-
-    std::set<QString> setOfPaths;
-
-    for (const auto &path : pathList) {
-        setOfPaths.insert(path);
-    }
-
-    if (_folderWatcher && _folderWatcher->isReliable()
+    SyncJournalFileRecord selectedFileRecord;
+    if (!selectedFilePath.isEmpty() && _journal.getFileRecord(selectedFilePath, &selectedFileRecord) && selectedFileRecord.isValid()) {
+        qCInfo(lcFolder) << "Going to sync just one file";
+        const auto localDiscoveryPath = [&selectedFileRecord]() {
+            if (selectedFileRecord.isDirectory()) {
+                return selectedFileRecord.path();
+            }
+            if (!selectedFileRecord.isDirectory()) {
+                auto selectedFilePathSplit = selectedFileRecord.path().split(QLatin1Char('/'), Qt::SkipEmptyParts);
+                if (selectedFilePathSplit.size() > 1) {
+                    selectedFilePathSplit.removeLast();
+                    return selectedFilePathSplit.join(QLatin1Char('/'));
+                } else {
+                    return QStringLiteral("/");
+                }
+            }
+        }();
+        _engine->setLocalDiscoveryOptions(LocalDiscoveryStyle::DatabaseAndFilesystem, {localDiscoveryPath});
+        _engine->setExclusiveDiscoveryOptions({localDiscoveryPath, SyncFileItem::fromSyncJournalFileRecord(selectedFileRecord)});
+        _localDiscoveryTracker->startSyncPartialDiscovery();
+    } else if (_folderWatcher && _folderWatcher->isReliable()
         && hasDoneFullLocalDiscovery
         && !periodicFullLocalDiscoveryNow) {
         qCInfo(lcFolder) << "Allowing local discovery to read from the database";
         _engine->setLocalDiscoveryOptions(
             LocalDiscoveryStyle::DatabaseAndFilesystem,
-            !setOfPaths.empty() ? setOfPaths : _localDiscoveryTracker->localDiscoveryPaths());
+            _localDiscoveryTracker->localDiscoveryPaths());
         _localDiscoveryTracker->startSyncPartialDiscovery();
     } else {
         qCInfo(lcFolder) << "Forbidding local discovery to read from the database";
-        _engine->setLocalDiscoveryOptions(LocalDiscoveryStyle::FilesystemOnly, setOfPaths);
         _localDiscoveryTracker->startSyncFullDiscovery();
     }
 

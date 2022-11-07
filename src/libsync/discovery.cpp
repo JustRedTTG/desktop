@@ -139,6 +139,11 @@ void ProcessDirectoryJob::process()
         PathTuple path;
         path = _currentFolder.addName(e.nameOverride.isEmpty() ? f.first : e.nameOverride);
 
+        if (!_discoveryData->_listExclusiveFiles.isEmpty() && !_discoveryData->_listExclusiveFiles.contains(path._server)) {
+            qCInfo(lcDisco) << "Skipping a file:" << path._server << "as it is not listed in the _listExclusiveFiles";
+            continue;
+        }
+
         if (isVfsWithSuffix()) {
             // Without suffix vfs the paths would be good. But since the dbEntry and localEntry
             // can have different names from f.first when suffix vfs is on, make sure the
@@ -190,6 +195,7 @@ void ProcessDirectoryJob::process()
 
         processFile(std::move(path), e.localEntry, e.serverEntry, e.dbEntry);
     }
+    _discoveryData->_listExclusiveFiles.clear();
     QTimer::singleShot(0, _discoveryData, &DiscoveryPhase::scheduleMoreJobs);
 }
 

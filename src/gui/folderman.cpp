@@ -874,7 +874,7 @@ void FolderMan::slotStartScheduledFolderSync()
         registerFolderWithSocketApi(folder);
 
         _currentSyncFolder = folder;
-        folder->startSync(QStringList());
+        folder->startSync();
     }
 }
 

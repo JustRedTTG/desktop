@@ -24,6 +24,7 @@
 #include "syncoptions.h"
 
 #include <QObject>
+#include <QString>
 #include <QStringList>
 #include <QUuid>
 #include <set>
@@ -322,11 +323,11 @@ public slots:
     void slotAboutToRemoveAllFiles(OCC::SyncFileItem::Direction, std::function<void(bool)> callback);
 
     /**
-      * Starts a sync operation
-      *
-      * If the list of changed files is known, it is passed.
-      */
-    void startSync(const QStringList &pathList = QStringList());
+     * Starts a sync operation
+     *
+     * If the selectedFilePath, only that file will be synced.
+     */
+    void startSync(const QString &selectedFilePath = {});
 
     int slotDiscardDownloadProgress();
     int downloadInfoCount();

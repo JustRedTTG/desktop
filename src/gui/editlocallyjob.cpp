@@ -275,10 +275,7 @@ void EditLocallyJob::startEditLocally()
     if (_folderForFile->isSyncRunning() && !_folderForFile->vfs().isHydrating()) {
         const auto syncFinishedConnectionWaitTerminate = connect(_folderForFile, &Folder::syncFinished, this, [this]() {
             disconnectSyncFinished();
-            auto relPathSplit = _relPath.split(QLatin1Char('/'));
-            relPathSplit.removeLast();
-            const auto subfolder = relPathSplit.join(QLatin1Char('/'));
-            _folderForFile->startSync({subfolder});
+            _folderForFile->startSync(_relPath);
             const auto syncFinishedConnection = connect(_folderForFile, &Folder::syncFinished, this, &EditLocallyJob::folderSyncFinished);
 
             EditLocallyManager::instance()->folderSyncFinishedConnections.insert(_localFilePath, syncFinishedConnection);
