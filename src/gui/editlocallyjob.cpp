@@ -271,6 +271,17 @@ void EditLocallyJob::startEditLocally()
 
     Systray::instance()->createEditFileLocallyLoadingDialog(_fileName);
 
+    
+
+    QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscoveredNoChanges, this, [this](const SyncFileItemPtr &item) {
+        const auto itemPath = item->_file;
+        const auto originalPath = _relPath;
+
+        if (itemPath == originalPath) {
+            ; // do something here
+        }
+    });
+
     // try to subscribe for specific sync item's 'finished' signal
     if (_folderForFile->isSyncRunning() && !_folderForFile->vfs().isHydrating()) {
         const auto syncFinishedConnectionWaitTerminate = connect(_folderForFile, &Folder::syncFinished, this, [this]() {

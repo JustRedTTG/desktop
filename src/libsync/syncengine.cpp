@@ -417,6 +417,7 @@ void OCC::SyncEngine::slotItemDiscovered(const OCC::SyncFileItemPtr &item)
             item->_instruction = CSYNC_INSTRUCTION_IGNORE;
             item->_status = SyncFileItem::Conflict;
         }
+        emit itemDiscoveredNoChanges(item);
         return;
     } else if (item->_instruction == CSYNC_INSTRUCTION_REMOVE && !item->_isSelectiveSync) {
         _hasRemoveFile = true;

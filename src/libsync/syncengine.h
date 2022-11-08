@@ -188,6 +188,8 @@ signals:
      */
     void seenLockedFile(const QString &fileName);
 
+    void itemDiscoveredNoChanges(const SyncFileItemPtr &item);
+
 private slots:
     void slotFolderDiscovered(bool local, const QString &folder);
     void slotRootEtagReceived(const QByteArray &, const QDateTime &time);
