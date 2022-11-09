@@ -187,10 +187,11 @@ ApplicationWindow {
                                                 fileDetailsDrawer.pageToShow);
                 }
             }
-            sourceComponent:FileDetailsPage {
+            sourceComponent: FileDetailsPage {
                 id: fileDetails
 
-                anchors.fill: parent
+                width: parent.width
+                height: parent.height
 
                 background: null
                 accountState: fileDetailsDrawer.folderAccountState
