@@ -271,9 +271,7 @@ void EditLocallyJob::startEditLocally()
 
     Systray::instance()->createEditFileLocallyLoadingDialog(_fileName);
 
-    
-
-    QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscoveredNoChanges, this, [this](const SyncFileItemPtr &item) {
+    QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscovered, this, [this](const SyncFileItemPtr &item) {
         const auto itemPath = item->_file;
         const auto originalPath = _relPath;
 

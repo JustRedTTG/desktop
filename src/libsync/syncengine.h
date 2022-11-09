@@ -164,6 +164,8 @@ signals:
 
     void transmissionProgress(const OCC::ProgressInfo &progress);
 
+    void itemDiscovered(const SyncFileItemPtr &);
+
     /// We've produced a new sync error of a type.
     void syncError(const QString &message, OCC::ErrorCategory category = OCC::ErrorCategory::Normal);
 
@@ -187,8 +189,6 @@ signals:
      * Forwarded from OwncloudPropagator::seenLockedFile.
      */
     void seenLockedFile(const QString &fileName);
-
-    void itemDiscoveredNoChanges(const SyncFileItemPtr &item);
 
 private slots:
     void slotFolderDiscovered(bool local, const QString &folder);

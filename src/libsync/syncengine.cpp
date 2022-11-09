@@ -320,6 +320,8 @@ void SyncEngine::conflictRecordMaintenance()
 
 void OCC::SyncEngine::slotItemDiscovered(const OCC::SyncFileItemPtr &item)
 {
+    emit itemDiscovered(item);
+
     if (Utility::isConflictFile(item->_file))
         _seenConflictFiles.insert(item->_file);
     if (item->_instruction == CSYNC_INSTRUCTION_UPDATE_METADATA && !item->isDirectory()) {
@@ -417,7 +419,6 @@ void OCC::SyncEngine::slotItemDiscovered(const OCC::SyncFileItemPtr &item)
             item->_instruction = CSYNC_INSTRUCTION_IGNORE;
             item->_status = SyncFileItem::Conflict;
         }
-        emit itemDiscoveredNoChanges(item);
         return;
     } else if (item->_instruction == CSYNC_INSTRUCTION_REMOVE && !item->_isSelectiveSync) {
         _hasRemoveFile = true;
