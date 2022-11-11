@@ -1509,6 +1509,11 @@ void AccountSettings::resetE2eEncryption()
     _ui->encryptionMessage->setIcon({});
     initializeE2eEncryption();
     checkClientSideEncryptionState();
+
+    const auto account = _accountState->account();
+    if (account->e2e()->_mnemonic.isEmpty()) {
+        FolderMan::instance()->removeE2eFiles(account);
+    }
 }
 
 void AccountSettings::removeActionFromEncryptionMessage(const QString &actionId)

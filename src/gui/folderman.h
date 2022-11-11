@@ -267,6 +267,8 @@ public slots:
 
     void forceSyncForFolder(Folder *folder);
 
+    void removeE2eFiles(const AccountPtr &account) const;
+
 private slots:
     void slotFolderSyncPaused(Folder *, bool paused);
     void slotFolderCanSyncChanged();
