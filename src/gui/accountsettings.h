@@ -114,11 +114,14 @@ protected slots:
 
 private slots:
     void displayMnemonic(const QString &mnemonic);
+    void disableEncryptionForAccount(const AccountPtr &account) const;
     void showConnectionLabel(const QString &message, QStringList errors = QStringList());
     void openIgnoredFilesDialog(const QString & absFolderPath);
     void customizeStyle();
 
     void initializeE2eEncryption();
+    void resetE2eEncryption();
+    void checkClientSideEncryptionState();
     void removeActionFromEncryptionMessage(const QString &actionId);
 
 private:
