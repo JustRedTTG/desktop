@@ -228,11 +228,6 @@ void PropagateItemJob::done(SyncFileItem::Status statusArg, const QString &error
 
     _item->_status = statusArg;
 
-    if (_item->_file.contains("Notes") || _item->_file.contains("Installing Nextcloud Server Docker container on Windows")) {
-        int a = 5;
-        a = 6;
-    }
-
     if (_item->_isRestoration) {
         if (_item->_status == SyncFileItem::Success
             || _item->_status == SyncFileItem::Conflict) {
