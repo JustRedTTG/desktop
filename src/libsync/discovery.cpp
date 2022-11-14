@@ -454,7 +454,7 @@ void ProcessDirectoryJob::processFileAnalyzeRemoteInfo(
     item->_remotePerm = serverEntry.remotePerm;
     item->_isShared = serverEntry.remotePerm.hasPermission(RemotePermissions::IsShared) || serverEntry.sharedByMe;
     item->_sharedByMe = serverEntry.sharedByMe;
-    item->_lastShareStateFetchedTimestmap = QDateTime::currentMSecsSinceEpoch();
+    item->_lastShareStateFetchedTimestamp = QDateTime::currentMSecsSinceEpoch();
     item->_type = serverEntry.isDirectory ? ItemTypeDirectory : ItemTypeFile;
     item->_etag = serverEntry.etag;
     item->_directDownloadUrl = serverEntry.directDownloadUrl;
@@ -1259,7 +1259,7 @@ void ProcessDirectoryJob::processFileAnalyzeLocalInfo(
         item->_remotePerm = base._remotePerm;
         item->_isShared = base._isShared;
         item->_sharedByMe = base._sharedByMe;
-        item->_lastShareStateFetchedTimestmap = base._lastShareStateFetchedTimestmap;
+        item->_lastShareStateFetchedTimestamp = base._lastShareStateFetchedTimestamp;
         item->_etag = base._etag;
         item->_type = base._type;
 
@@ -1387,7 +1387,7 @@ void ProcessDirectoryJob::processFileConflict(const SyncFileItemPtr &item, Proce
             rec._remotePerm = serverEntry.remotePerm;
             rec._isShared = serverEntry.remotePerm.hasPermission(RemotePermissions::IsShared) || serverEntry.sharedByMe;
             rec._sharedByMe = serverEntry.sharedByMe;
-            rec._lastShareStateFetchedTimestmap = QDateTime::currentMSecsSinceEpoch();
+            rec._lastShareStateFetchedTimestamp = QDateTime::currentMSecsSinceEpoch();
             rec._checksumHeader = serverEntry.checksumHeader;
             const auto result = _discoveryData->_statedb->setFileRecord(rec);
             if (!result) {

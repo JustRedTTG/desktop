@@ -122,8 +122,8 @@ void ShellExtensionsServer::processCustomStateRequest(QLocalSocket *socket, cons
             QVariantMap{{VfsShellExtensions::Protocol::CustomStateStatesKey, states}}}};
     };
 
-    if (QDateTime::currentMSecsSinceEpoch() - record._lastShareStateFetchedTimestmap < _isSharedInvalidationInterval) {
-        qCInfo(lcShellExtServer) << record.path() << " record._lastShareStateFetchedTimestmap has less than " << _isSharedInvalidationInterval << " ms difference with QDateTime::currentMSecsSinceEpoch(). Returning data from SyncJournal.";
+    if (QDateTime::currentMSecsSinceEpoch() - record._lastShareStateFetchedTimestamp < _isSharedInvalidationInterval) {
+        qCInfo(lcShellExtServer) << record.path() << " record._lastShareStateFetchedTimestamp has less than " << _isSharedInvalidationInterval << " ms difference with QDateTime::currentMSecsSinceEpoch(). Returning data from SyncJournal.";
         sendJsonMessageWithVersion(socket, composeMessageReplyFromRecord(record));
         closeSession(socket);
         return;
@@ -194,12 +194,12 @@ void ShellExtensionsServer::processCustomStateRequest(QLocalSocket *socket, cons
 
         const auto isIncomingShare = properties.contains(QStringLiteral("permissions")) && RemotePermissions::fromServerString(properties.value(QStringLiteral("permissions"))).hasPermission(OCC::RemotePermissions::IsShared);
 
-        const auto isMyShare = !properties.value(QStringLiteral("share-types")).isEmpty();
+        const auto sharedByMe = !properties.value(QStringLiteral("share-types")).isEmpty();
 
-        record._isMyShare = isMyShare;
+        record._sharedByMe = sharedByMe;
 
-        record._isShared = isIncomingShare || isMyShare;
-        record._lastShareStateFetchedTimestmap = QDateTime::currentMSecsSinceEpoch();
+        record._isShared = isIncomingShare || sharedByMe;
+        record._lastShareStateFetchedTimestamp = QDateTime::currentMSecsSinceEpoch();
 
         if (!folder->journalDb()->setFileRecord(record)) {
             qCWarning(lcShellExtServer) << "Could not set file record for path: " << record._path;
