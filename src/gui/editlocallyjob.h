@@ -17,6 +17,7 @@
 #include <QObject>
 
 #include "accountstate.h"
+#include <syncfileitem.h>
 
 namespace OCC {
 
@@ -59,8 +60,11 @@ private slots:
     void showErrorMessageBox(const QString &message, const QString &informativeText) const;
 
     void remoteTokenCheckResultReceived(const int statusCode);
-    void folderSyncFinished(const OCC::SyncResult &result);
+    void slotItemDiscovered(const OCC::SyncFileItemPtr &item);
+    void slotItemCompleted(const OCC::SyncFileItemPtr &item);
 
+    void disconnectItemDiscovered() const;
+    void disconnectItemCompleted() const;
     void disconnectSyncFinished() const;
     void openFile();
 

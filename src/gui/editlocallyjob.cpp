@@ -271,23 +271,15 @@ void EditLocallyJob::startEditLocally()
 
     Systray::instance()->createEditFileLocallyLoadingDialog(_fileName);
 
-    QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscovered, this, [this](const SyncFileItemPtr &item) {
-        const auto itemPath = item->_file;
-        const auto originalPath = _relPath;
-
-        if (itemPath == originalPath) {
-            ; // do something here
-        }
-    });
-
     // try to subscribe for specific sync item's 'finished' signal
-    if (_folderForFile->isSyncRunning() && !_folderForFile->vfs().isHydrating()) {
+    if (_folderForFile->isSyncRunning()/* && !_folderForFile->vfs().isHydrating()*/) {
         const auto syncFinishedConnectionWaitTerminate = connect(_folderForFile, &Folder::syncFinished, this, [this]() {
             disconnectSyncFinished();
-            _folderForFile->startSync(_relPath);
-            const auto syncFinishedConnection = connect(_folderForFile, &Folder::syncFinished, this, &EditLocallyJob::folderSyncFinished);
 
-            EditLocallyManager::instance()->folderSyncFinishedConnections.insert(_localFilePath, syncFinishedConnection);
+            const auto itemDiscoveredConnection = QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscovered, this, &EditLocallyJob::slotItemDiscovered);
+            EditLocallyManager::instance()->folderItemDiscoveredConnections.insert(_localFilePath, itemDiscoveredConnection);
+
+            _folderForFile->startSync(_relPath);
         });
 
         EditLocallyManager::instance()->folderSyncFinishedConnections.insert(_localFilePath, syncFinishedConnectionWaitTerminate);
@@ -296,19 +288,60 @@ void EditLocallyJob::startEditLocally()
         return;
     }
 
+    const auto itemDiscoveredConnection = QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscovered, this, &EditLocallyJob::slotItemDiscovered);
+    EditLocallyManager::instance()->folderItemDiscoveredConnections.insert(_localFilePath, itemDiscoveredConnection);
     _folderForFile->startSync({_relPath});
-    const auto syncFinishedConnection = connect(_folderForFile, &Folder::syncFinished,
-                                                this, &EditLocallyJob::folderSyncFinished);
-
-    EditLocallyManager::instance()->folderSyncFinishedConnections.insert(_localFilePath,
-                                                                         syncFinishedConnection);
 }
 
-void EditLocallyJob::folderSyncFinished(const OCC::SyncResult &result)
+void EditLocallyJob::slotItemCompleted(const OCC::SyncFileItemPtr &item)
 {
-    Q_UNUSED(result)
-    disconnectSyncFinished();
-    openFile();
+    if (item->_file == _relPath) {
+        disconnectItemCompleted();
+        disconnectItemDiscovered();
+        disconnectSyncFinished();
+        openFile();
+    }
+}
+
+void EditLocallyJob::slotItemDiscovered(const OCC::SyncFileItemPtr &item)
+{
+    if (item->_file == _relPath) {
+        disconnectItemDiscovered();
+        if (item->_instruction == CSYNC_INSTRUCTION_NONE) {
+            slotItemCompleted(item);
+            return;
+        }
+        const auto itemCompletedConnection = QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemCompleted, this, &EditLocallyJob::slotItemCompleted);
+        EditLocallyManager::instance()->folderItemCompletedConnections.insert(_localFilePath, itemCompletedConnection);
+    }
+}
+
+void EditLocallyJob::disconnectItemCompleted() const
+{
+    if (_localFilePath.isEmpty()) {
+        return;
+    }
+
+    const auto manager = EditLocallyManager::instance();
+
+    if (const auto existingConnection = manager->folderItemCompletedConnections.value(_localFilePath)) {
+        disconnect(existingConnection);
+        manager->folderItemCompletedConnections.remove(_localFilePath);
+    }
+}
+
+void EditLocallyJob::disconnectItemDiscovered() const
+{
+    if (_localFilePath.isEmpty()) {
+        return;
+    }
+
+    const auto manager = EditLocallyManager::instance();
+
+    if (const auto existingConnection = manager->folderItemDiscoveredConnections.value(_localFilePath)) {
+        disconnect(existingConnection);
+        manager->folderItemDiscoveredConnections.remove(_localFilePath);
+    }
 }
 
 void EditLocallyJob::disconnectSyncFinished() const
