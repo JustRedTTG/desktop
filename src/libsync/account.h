@@ -304,10 +304,13 @@ public:
     void setE2eEncryptionKeysGenerationAllowed(bool allowed);
     [[nodiscard]] bool e2eEncryptionKeysGenerationAllowed() const;
 
+    [[nodiscard]] bool askUserForMnemonic() const;
+
 public slots:
     /// Used when forgetting credentials
     void clearQNAMCache();
     void slotHandleSslErrors(QNetworkReply *, QList<QSslError>);
+    void setAskUserForMnemonic(const bool ask);
 
 signals:
     /// Emitted whenever there's network activity
@@ -360,6 +363,7 @@ private:
     bool _trustCertificates = false;
 
     bool _e2eEncryptionKeysGenerationAllowed = false;
+    bool _e2eAskUserForMnemonic = false;
 
     QWeakPointer<Account> _sharedThis;
     QString _id;
