@@ -626,7 +626,9 @@ void SyncEngine::startSync()
 
     ProcessDirectoryJob *discoveryJob = nullptr;
 
-    if (!_exclusiveDiscoveryOptions.filePath.isEmpty() && _exclusiveDiscoveryOptions.fileItem) {
+    SyncJournalFileRecord rec;
+    if (!_exclusiveDiscoveryOptions.filePath.isEmpty() && _exclusiveDiscoveryOptions.fileItem
+        && _journal->getFileRecord(_exclusiveDiscoveryOptions.filePath, &rec) && rec.isValid()) {
         ProcessDirectoryJob::PathTuple path = {};
         path._local = _exclusiveDiscoveryOptions.filePath;
         path._original = _exclusiveDiscoveryOptions.filePath;
@@ -634,8 +636,6 @@ void SyncEngine::startSync()
         path._target = _exclusiveDiscoveryOptions.filePath;
         _discoveryPhase->_listExclusiveFiles.clear();
         _discoveryPhase->_listExclusiveFiles.push_back(_exclusiveDiscoveryOptions.fileItem->_file);
-        SyncJournalFileRecord rec;
-        _journal->getFileRecord(_exclusiveDiscoveryOptions.filePath, &rec);
         discoveryJob = new ProcessDirectoryJob(_discoveryPhase.data(),
                                                PinState::AlwaysLocal,
                                                path,
