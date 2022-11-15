@@ -129,7 +129,7 @@ void EditLocallyJob::proceedWithSetup()
     }
 
     const auto foundFiles = FolderMan::instance()->findFileInLocalFolders(_relPath, _accountState->account());
-
+    // see if the following condition can be changed such that we can sync the file even if it was not yet synced but is already in a whitelist
     if (foundFiles.isEmpty()) {
         if (isRelPathExcluded(_relPath)) {
             showError(tr("Could not find a file for local editing. Make sure it is not excluded via selective sync."), _relPath);
