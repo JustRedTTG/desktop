@@ -882,6 +882,7 @@ void Folder::startSync(const QString &selectedFilePath)
                     return QStringLiteral("/");
                 }
             }
+            return QString{};
         }();
         _engine->setLocalDiscoveryOptions(LocalDiscoveryStyle::DatabaseAndFilesystem, {localDiscoveryPath});
         _engine->setExclusiveDiscoveryOptions({localDiscoveryPath, SyncFileItem::fromSyncJournalFileRecord(selectedFileRecord)});
