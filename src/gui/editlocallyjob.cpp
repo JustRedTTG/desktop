@@ -128,25 +128,6 @@ void EditLocallyJob::proceedWithSetup()
         return;
     }
 
-    const auto foundFiles = FolderMan::instance()->findFileInLocalFolders(_relPath, _accountState->account());
-    // see if the following condition can be changed such that we can sync the file even if it was not yet synced but is already in a whitelist
-    if (foundFiles.isEmpty()) {
-        if (isRelPathExcluded(_relPath)) {
-            showError(tr("Could not find a file for local editing. Make sure it is not excluded via selective sync."), _relPath);
-        } else {
-            showError(tr("Could not find a file for local editing. Make sure its path is valid and it is synced locally."), _relPath);
-        }
-        return;
-    }
-
-    _localFilePath = foundFiles.first();
-    _folderForFile = FolderMan::instance()->folderForPath(_localFilePath);
-
-    if (!_folderForFile) {
-        showError(tr("Could not find a folder to sync."), _relPath);
-        return;
-    }
-
     const auto relPathSplit = _relPath.split(QLatin1Char('/'));
     if (relPathSplit.isEmpty()) {
         showError(tr("Could not find a file for local editing. Make sure its path is valid and it is synced locally."), _relPath);
@@ -154,6 +135,15 @@ void EditLocallyJob::proceedWithSetup()
     }
 
     _fileName = relPathSplit.last();
+
+    _folderForFile = findFolderForFile(_relPath, _userId);
+
+    if (!_folderForFile) {
+        showError(tr("Could not find a file for local editing. Make sure it is not excluded via selective sync."), _relPath);
+        return;
+    }
+
+    _localFilePath = _folderForFile->path() + _relPath;
 
     Systray::instance()->destroyEditFileLocallyLoadingDialog();
     Q_EMIT setupFinished();
@@ -201,7 +191,7 @@ bool EditLocallyJob::isRelPathValid(const QString &relPath)
     return true;
 }
 
-bool EditLocallyJob::isRelPathExcluded(const QString &relPath)
+OCC::Folder *EditLocallyJob::findFolderForFile(const QString &relPath, const QString &userId)
 {
     if (relPath.isEmpty()) {
         return false;
@@ -209,16 +199,20 @@ bool EditLocallyJob::isRelPathExcluded(const QString &relPath)
 
     const auto folderMap = FolderMan::instance()->map();
     for (const auto &folder : folderMap) {
+        if (folder->accountState()->account()->userIdAtHostWithPort() != userId) {
+            continue;
+        }
         bool result = false;
         const auto excludedThroughSelectiveSync = folder->journalDb()->getSelectiveSyncList(SyncJournalDb::SelectiveSyncBlackList, &result);
         for (const auto &excludedPath : excludedThroughSelectiveSync) {
             if (relPath.startsWith(excludedPath)) {
-                return true;
+                return nullptr;
             }
         }
+        return folder;
     }
 
-    return false;
+    return nullptr;
 }
 
 void EditLocallyJob::showError(const QString &message, const QString &informativeText)

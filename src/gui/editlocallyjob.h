@@ -39,7 +39,7 @@ public:
 
     [[nodiscard]] static bool isTokenValid(const QString &token);
     [[nodiscard]] static bool isRelPathValid(const QString &relPath);
-    [[nodiscard]] static bool isRelPathExcluded(const QString &relPath);
+    [[nodiscard]] static OCC::Folder *findFolderForFile(const QString &relPath, const QString &userId);
     [[nodiscard]] static QString prefixSlashToPath(const QString &path);
 
 signals:
