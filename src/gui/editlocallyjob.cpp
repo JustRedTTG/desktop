@@ -35,8 +35,10 @@ EditLocallyJob::EditLocallyJob(const QString &userId,
     : QObject{parent}
     , _userId(userId)
     , _relPath(relPath)
+    , _relPathSplit(relPath.split(QLatin1Char('/')))
     , _token(token)
 {
+    _relPathParent = _relPathSplit.size() > 1 ? QStringList(_relPathSplit.begin(), _relPathSplit.end() - 1).join(QLatin1Char('/')) : QStringLiteral("/");
 }
 
 void EditLocallyJob::startSetup()
@@ -118,17 +120,12 @@ void EditLocallyJob::remoteTokenCheckResultReceived(const int statusCode)
         return;
     }
 
-    QString remoteParentPath = QStringLiteral("/");
-
-    auto relPathSplit = _relPath.split(QLatin1Char('/'));
-    if (relPathSplit.size() > 1) {
-        relPathSplit.removeLast();
-        remoteParentPath = relPathSplit.join(QLatin1Char('/'));
+    if (_relPathParent == QStringLiteral("/")) {
+        proceedWithSetup();
+        return;
     }
 
-    QVariantMap items;
-
-    const auto job = new LsColJob(_accountState->account(), remoteParentPath, this);
+    const auto job = new LsColJob(_accountState->account(), _relPathParent, this);
     const QList<QByteArray> props {
         QByteArrayLiteral("resourcetype"),
         QByteArrayLiteral("getlastmodified"),
@@ -143,9 +140,12 @@ void EditLocallyJob::remoteTokenCheckResultReceived(const int statusCode)
     };
 
     job->setProperties(props);
-    connect(job, &LsColJob::directoryListingIterated, this, [&items, this](const QString &name, const QMap<QString, QString> &properties) {
-        if (name.endsWith(_relPath)) {
-            _item = fileItemFromProperties(_relPath, properties);
+    connect(job, &LsColJob::directoryListingIterated, this, [this](const QString &name, const QMap<QString, QString> &properties) {
+        const auto davPath = _accountState->account()->davPath();
+        const auto nameWithoutDavPath = name.mid(davPath.size());
+        const auto cleanName = !nameWithoutDavPath.isEmpty() ? nameWithoutDavPath : QStringLiteral("/");
+        if (cleanName.endsWith(_relPathParent)) {
+            _item = fileItemFromProperties(cleanName, properties);
         }
     });
     connect(job, &LsColJob::finishedWithoutError, this, [this]() {
@@ -177,18 +177,17 @@ void EditLocallyJob::proceedWithSetup()
         return;
     }
 
-    if (!_item || _item->isEmpty()) {
+    if (_relPathParent != QStringLiteral("/") && (!_item || _item->isEmpty())) {
         showError(tr("Could not find a file for local editing. Make sure its path is valid and it is synced locally."), _relPath);
         return;
     }
 
-    const auto relPathSplit = _relPath.split(QLatin1Char('/'));
-    if (relPathSplit.isEmpty()) {
+    if (_relPathSplit.isEmpty()) {
         showError(tr("Could not find a file for local editing. Make sure its path is valid and it is synced locally."), _relPath);
         return;
     }
 
-    _fileName = relPathSplit.last();
+    _fileName = _relPathSplit.last();
 
     _folderForFile = findFolderForFile(_relPath, _userId);
 
@@ -208,10 +207,11 @@ QString EditLocallyJob::prefixSlashToPath(const QString &path)
     return path.startsWith('/') ? path : QChar::fromLatin1('/') + path;
 }
 
-SyncFileItemPtr EditLocallyJob::fileItemFromProperties(const QString &filePath, const QMap<QString, QString> &properties)
+SyncFileItemPtr EditLocallyJob::fileItemFromProperties(const QString &filePath, const QMap<QString, QString> &properties) const
 {
     SyncFileItemPtr item(new SyncFileItem);
     item->_file = filePath;
+    item->_originalFile = filePath;
 
     const auto isDirectory = properties.value(QStringLiteral("resourcetype")).contains(QStringLiteral("collection"));
     item->_type = isDirectory ? ItemTypeDirectory : ItemTypeFile;
@@ -281,6 +281,10 @@ SyncFileItemPtr EditLocallyJob::fileItemFromProperties(const QString &filePath, 
     if (properties.contains(QStringLiteral("checksums"))) {
         item->_checksumHeader = findBestChecksum(properties.value("checksums").toUtf8());
     }
+
+    item->_direction = SyncFileItem::None;
+    item->_instruction = CSYNC_INSTRUCTION_NONE;
+
     return item;
 }
 
@@ -411,11 +415,34 @@ void EditLocallyJob::startEditLocally()
 
     Systray::instance()->createEditFileLocallyLoadingDialog(_fileName);
 
+    for (const auto &folder : FolderMan::instance()->map()) {
+        if (folder != _folderForFile) {
+            folder->slotTerminateSync();
+        }
+    }
+
     if (_folderForFile->isSyncRunning()) {
         // in case sync is already running - terminate it and start a new one
         _syncFinishedConnection = connect(_folderForFile, &Folder::syncFinished, this, [this]() {
             disconnect(_syncFinishedConnection);
             _syncFinishedConnection = {};
+
+            SyncJournalFileRecord rec;
+            if (!_folderForFile->journalDb()->getFileRecord(_item->_file, &rec) || !rec.isValid()) {
+                _item->_direction = SyncFileItem::Down;
+                _item->_instruction = CSYNC_INSTRUCTION_NEW;
+            } else if (rec._etag != _item->_etag && rec._modtime != _item->_modtime) {
+                _item->_direction = rec._modtime < _item->_modtime ? SyncFileItem::Down : SyncFileItem::Up;
+                _item->_instruction = CSYNC_INSTRUCTION_UPDATE_METADATA;
+            } else {
+                SyncJournalFileRecord recFile;
+                if (_folderForFile->journalDb()->getFileRecord(_relPath, &recFile) && recFile.isValid()) {
+                    openFile();
+                    return;
+                }
+                _item->_direction = SyncFileItem::Down;
+                _item->_instruction = CSYNC_INSTRUCTION_UPDATE_METADATA;
+            }
 
             // connect to a SyncEngine::itemDiscovered so we can complete the job as soon as the file in question is discovered 
             QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscovered, this, &EditLocallyJob::slotItemDiscovered);
@@ -425,6 +452,23 @@ void EditLocallyJob::startEditLocally()
         _folderForFile->slotTerminateSync();
 
         return;
+    }
+
+    SyncJournalFileRecord rec;
+    if (!_folderForFile->journalDb()->getFileRecord(_item->_file, &rec) || !rec.isValid()) {
+        _item->_direction = SyncFileItem::Down;
+        _item->_instruction = CSYNC_INSTRUCTION_NEW;
+    } else if (rec._etag != _item->_etag && rec._modtime != _item->_modtime) {
+        _item->_direction = rec._modtime < _item->_modtime ? SyncFileItem::Down : SyncFileItem::Up;
+        _item->_instruction = CSYNC_INSTRUCTION_UPDATE_METADATA;
+    } else {
+        SyncJournalFileRecord recFile;
+        if (_folderForFile->journalDb()->getFileRecord(_relPath, &recFile) && recFile.isValid()) {
+            openFile();
+            return;
+        }
+        _item->_direction = SyncFileItem::Down;
+        _item->_instruction = CSYNC_INSTRUCTION_UPDATE_METADATA;
     }
 
     QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscovered, this, &EditLocallyJob::slotItemDiscovered);

@@ -125,12 +125,13 @@ public:
     }
 
     explicit ProcessDirectoryJob(DiscoveryPhase *data, PinState basePinState, const PathTuple &path, const SyncFileItemPtr &dirItem,
-        qint64 lastSyncTimestamp, QObject *parent)
+        QueryMode queryLocal, qint64 lastSyncTimestamp, QObject *parent)
         : QObject(parent)
-        , _lastSyncTimestamp(lastSyncTimestamp)
         , _discoveryData(data)
-        , _dirItem(dirItem)
         , _currentFolder(path)
+        , _dirItem(dirItem)
+        , _queryLocal(queryLocal)
+        , _lastSyncTimestamp(lastSyncTimestamp)
     {
         computePinState(basePinState);
     }

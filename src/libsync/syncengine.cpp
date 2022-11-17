@@ -626,22 +626,29 @@ void SyncEngine::startSync()
 
     ProcessDirectoryJob *discoveryJob = nullptr;
 
-    SyncJournalFileRecord rec;
-    if (!_exclusiveDiscoveryOptions.filePath.isEmpty() && _exclusiveDiscoveryOptions.fileItem) {
+    if (!_singleItemDiscoveryOptions.path.isEmpty() && _singleItemDiscoveryOptions.item) {
         ProcessDirectoryJob::PathTuple path = {};
-        path._local = _exclusiveDiscoveryOptions.filePath;
-        path._original = _exclusiveDiscoveryOptions.filePath;
-        path._server = _exclusiveDiscoveryOptions.filePath;
-        path._target = _exclusiveDiscoveryOptions.filePath;
+        path._local = _singleItemDiscoveryOptions.path;
+        path._original = _singleItemDiscoveryOptions.path;
+        path._server = _singleItemDiscoveryOptions.path;
+        path._target = _singleItemDiscoveryOptions.path;
+
         _discoveryPhase->_listExclusiveFiles.clear();
-        _discoveryPhase->_listExclusiveFiles.push_back(_exclusiveDiscoveryOptions.fileItem->_file);
+        _discoveryPhase->_listExclusiveFiles.push_back(_singleItemDiscoveryOptions.filePath);
+
+        SyncJournalFileRecord rec;
+        const auto localQueryMode = _journal->getFileRecord(_singleItemDiscoveryOptions.item->_file, &rec) && rec.isValid()
+            ? ProcessDirectoryJob::NormalQuery
+            : ProcessDirectoryJob::ParentDontExist;
+
         discoveryJob = new ProcessDirectoryJob(_discoveryPhase.data(),
                                                PinState::AlwaysLocal,
                                                path,
-                                               _exclusiveDiscoveryOptions.fileItem,
+                                               _singleItemDiscoveryOptions.item,
+                                               localQueryMode,
                                                _journal->keyValueStoreGetInt("last_sync", 0),
                                                _discoveryPhase.data());
-        _exclusiveDiscoveryOptions = {};
+        _singleItemDiscoveryOptions = {};
     } else {
         discoveryJob =
             new ProcessDirectoryJob(_discoveryPhase.data(), PinState::AlwaysLocal, _journal->keyValueStoreGetInt("last_sync", 0), _discoveryPhase.data());
@@ -1015,9 +1022,9 @@ void SyncEngine::setLocalDiscoveryOptions(LocalDiscoveryStyle style, std::set<QS
     }
 }
 
-void SyncEngine::setExclusiveDiscoveryOptions(ExclusiveDiscoveryOptions exclusiveDiscoveryOptions)
+void SyncEngine::setSingleItemDiscoveryOptions(const SingleItemDiscoveryOptions &singleItemDiscoveryOptions)
 {
-    _exclusiveDiscoveryOptions = exclusiveDiscoveryOptions;
+    _singleItemDiscoveryOptions = singleItemDiscoveryOptions;
 }
 
 bool SyncEngine::shouldDiscoverLocally(const QString &path) const

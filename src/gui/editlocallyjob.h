@@ -43,7 +43,7 @@ public:
     [[nodiscard]] static QString prefixSlashToPath(const QString &path);
 
 private:
-    [[nodiscard]] static SyncFileItemPtr fileItemFromProperties(const QString &filePath, const QMap<QString, QString> &properties);
+    [[nodiscard]] SyncFileItemPtr fileItemFromProperties(const QString &filePath, const QMap<QString, QString> &properties) const;
 
 signals:
     void setupFinished();
@@ -74,6 +74,8 @@ private:
     AccountStatePtr _accountState;
     QString _userId;
     QString _relPath;
+    QStringList _relPathSplit;
+    QString _relPathParent;
     QString _token;
     SyncFileItemPtr _item;
 

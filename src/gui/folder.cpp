@@ -881,7 +881,7 @@ void Folder::startSync(const QString &selectedFilePath, const SyncFileItemPtr &s
             }
         }();
         _engine->setLocalDiscoveryOptions(LocalDiscoveryStyle::DatabaseAndFilesystem, {localDiscoveryPath});
-        _engine->setExclusiveDiscoveryOptions({localDiscoveryPath, selectedFileItem});
+        _engine->setSingleItemDiscoveryOptions({localDiscoveryPath, selectedFilePath, selectedFileItem});
         _localDiscoveryTracker->startSyncPartialDiscovery();
     } else if (_folderWatcher && _folderWatcher->isReliable()
         && hasDoneFullLocalDiscovery

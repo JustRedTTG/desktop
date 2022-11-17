@@ -57,9 +57,10 @@ class OWNCLOUDSYNC_EXPORT SyncEngine : public QObject
 {
     Q_OBJECT
 public:
-    struct ExclusiveDiscoveryOptions {
+    struct SingleItemDiscoveryOptions {
+        QString path;
         QString filePath;
-        SyncFileItemPtr fileItem;
+        SyncFileItemPtr item;
     };
 
     SyncEngine(AccountPtr account,
@@ -148,7 +149,7 @@ public slots:
      */
     void setLocalDiscoveryOptions(OCC::LocalDiscoveryStyle style, std::set<QString> paths = {});
 
-    void setExclusiveDiscoveryOptions(ExclusiveDiscoveryOptions exclusiveDiscoveryOptions);
+    void setSingleItemDiscoveryOptions(const SingleItemDiscoveryOptions &singleItemDiscoveryOptions);
 
     void addAcceptedInvalidFileName(const QString& filePath);
 
@@ -385,7 +386,7 @@ private:
     // A vector of all the (unique) scheduled sync timers
     QVector<QSharedPointer<ScheduledSyncTimer>> _scheduledSyncTimers;
 
-    ExclusiveDiscoveryOptions _exclusiveDiscoveryOptions;
+    SingleItemDiscoveryOptions _singleItemDiscoveryOptions;
 };
 }
 
