@@ -42,6 +42,9 @@ public:
     [[nodiscard]] static OCC::Folder *findFolderForFile(const QString &relPath, const QString &userId);
     [[nodiscard]] static QString prefixSlashToPath(const QString &path);
 
+private:
+    [[nodiscard]] static SyncFileItemPtr fileItemFromProperties(const QString &filePath, const QMap<QString, QString> &properties);
+
 signals:
     void setupFinished();
     void error(const QString &message, const QString &informativeText);
@@ -63,9 +66,6 @@ private slots:
     void slotItemDiscovered(const OCC::SyncFileItemPtr &item);
     void slotItemCompleted(const OCC::SyncFileItemPtr &item);
 
-    void disconnectItemDiscovered() const;
-    void disconnectItemCompleted() const;
-    void disconnectSyncFinished() const;
     void openFile();
 
 private:
@@ -81,6 +81,7 @@ private:
     QString _localFilePath;
     Folder *_folderForFile = nullptr;
     std::unique_ptr<SimpleApiJob> _checkTokenJob;
+    QMetaObject::Connection _syncFinishedConnection = {};
 };
 
 }

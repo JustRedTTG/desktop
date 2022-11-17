@@ -129,97 +129,43 @@ void EditLocallyJob::remoteTokenCheckResultReceived(const int statusCode)
     QVariantMap items;
 
     const auto job = new LsColJob(_accountState->account(), remoteParentPath, this);
-    QList<QByteArray> props;
-    props << "resourcetype"
-          << "getlastmodified"
-          << "getcontentlength"
-          << "getetag"
-          << "http://owncloud.org/ns:size"
-          << "http://owncloud.org/ns:id"
-          << "http://owncloud.org/ns:fileid"
-          << "http://owncloud.org/ns:dDC"
-          << "http://owncloud.org/ns:permissions"
-          << "http://owncloud.org/ns:checksums";
+    const QList<QByteArray> props {
+        QByteArrayLiteral("resourcetype"),
+        QByteArrayLiteral("getlastmodified"),
+        QByteArrayLiteral("getcontentlength"),
+        QByteArrayLiteral("getetag"),
+        QByteArrayLiteral("http://owncloud.org/ns:size"),
+        QByteArrayLiteral("http://owncloud.org/ns:id"),
+        QByteArrayLiteral("http://owncloud.org/ns:fileid"),
+        QByteArrayLiteral("http://owncloud.org/ns:dDC"),
+        QByteArrayLiteral("http://owncloud.org/ns:permissions"),
+        QByteArrayLiteral("http://owncloud.org/ns:checksums")
+    };
 
     job->setProperties(props);
     connect(job, &LsColJob::directoryListingIterated, this, [&items, this](const QString &name, const QMap<QString, QString> &properties) {
         if (name.endsWith(_relPath)) {
-            SyncFileItemPtr item(new SyncFileItem);
-            item->_file = _relPath;
-            item->_size = properties.value(QStringLiteral("size")).toInt();
-            item->_fileId = properties.value(QStringLiteral("fileId")).toUtf8();
-            const auto isDirectory = properties.value(QStringLiteral("resourcetype")).contains(QStringLiteral("collection"));
-            item->_type = isDirectory ? ItemTypeDirectory : ItemTypeFile;
-
-            if (properties.contains(QStringLiteral("permissions"))) {
-                item->_remotePerm = RemotePermissions::fromServerString(properties.value("permissions"));
-                item->_isShared = item->_remotePerm.hasPermission(RemotePermissions::IsShared);
-                item->_lastShareStateFetchedTimestmap = QDateTime::currentMSecsSinceEpoch();
-            }
-
-            if (!properties.value(QStringLiteral("share-types")).isEmpty()) {
-                item->_remotePerm.setPermission(RemotePermissions::IsShared);
-                item->_isShared = true;
-                item->_lastShareStateFetchedTimestmap = QDateTime::currentMSecsSinceEpoch();
-            }
-
-            item->_isEncrypted = properties.value(QStringLiteral("is-encrypted")) == QStringLiteral("1");
-            item->_locked = properties.value(QStringLiteral("lock")) == QStringLiteral("1")
-                ? SyncFileItem::LockStatus::LockedItem
-                : SyncFileItem::LockStatus::UnlockedItem;
-            item->_lockOwnerDisplayName = properties.value(QStringLiteral("lock-owner-displayname"));
-            item->_lockOwnerId = properties.value(QStringLiteral("lock-owner"));
-            item->_lockEditorApp = properties.value(QStringLiteral("lock-owner-editor"));
-
-            {
-                auto ok = false;
-                const auto intConvertedValue = properties.value(QStringLiteral("lock-owner-type")).toULongLong(&ok);
-                if (ok) {
-                    item->_lockOwnerType = static_cast<SyncFileItem::LockOwnerType>(intConvertedValue);
-                } else {
-                    item->_lockOwnerType = SyncFileItem::LockOwnerType::UserLock;
-                }
-            }
-
-            {
-                auto ok = false;
-                const auto intConvertedValue = properties.value(QStringLiteral("lock-time")).toULongLong(&ok);
-                if (ok) {
-                    item->_lockTime = intConvertedValue;
-                } else {
-                    item->_lockTime = 0;
-                }
-            }
-
-            {
-                auto ok = false;
-                const auto intConvertedValue = properties.value(QStringLiteral("lock-timeout")).toULongLong(&ok);
-                if (ok) {
-                    item->_lockTimeout = intConvertedValue;
-                } else {
-                    item->_lockTimeout = 0;
-                }
-            }
-
-            const auto date = QDateTime::fromString(properties.value(QStringLiteral("getlastmodified")), Qt::RFC2822Date);
-            Q_ASSERT(date.isValid());
-            if (date.toSecsSinceEpoch() > 0) {
-                item->_modtime = date.toSecsSinceEpoch();
-            }
-
-            if (properties.contains(QStringLiteral("getetag"))) {
-                item->_etag = parseEtag(properties.value(QStringLiteral("getetag")).toUtf8());
-            }
-
-            if (properties.contains(QStringLiteral("checksums"))) {
-                item->_checksumHeader = findBestChecksum(properties.value("checksums").toUtf8());
-            }
-
-            _item = item;
+            _item = fileItemFromProperties(_relPath, properties);
         }
     });
     connect(job, &LsColJob::finishedWithoutError, this, [this]() {
         proceedWithSetup();
+    });
+    connect(job, &LsColJob::finishedWithError, this, [this](QNetworkReply *reply) {
+        const auto contentType = reply->header(QNetworkRequest::ContentTypeHeader).toString();
+        const auto invalidContentType = !contentType.contains(QStringLiteral("application/xml; charset=utf-8")) && !contentType.contains(QStringLiteral("application/xml; charset=\"utf-8\""))
+            && !contentType.contains(QStringLiteral("text/xml; charset=utf-8")) && !contentType.contains(QStringLiteral("text/xml; charset=\"utf-8\""));
+        const auto httpCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        auto msg = reply->errorString();
+
+        qCWarning(lcEditLocallyJob) << "LSCOL job error" << reply->errorString() << httpCode << reply->error();
+
+        if (reply->error() == QNetworkReply::NoError && invalidContentType) {
+            msg = tr("Server error: PROPFIND reply is not XML formatted!");
+        }
+        qCWarning(lcEditLocallyJob) << "Could not proceed with setup as file PROPFIND job has failed." << httpCode << msg;
+        showError(tr("Could not find a remote file info for local editing. Make sure its path is valid."), _relPath);
+        return;
     });
     job->start();
 }
@@ -260,6 +206,82 @@ void EditLocallyJob::proceedWithSetup()
 QString EditLocallyJob::prefixSlashToPath(const QString &path)
 {
     return path.startsWith('/') ? path : QChar::fromLatin1('/') + path;
+}
+
+SyncFileItemPtr EditLocallyJob::fileItemFromProperties(const QString &filePath, const QMap<QString, QString> &properties)
+{
+    SyncFileItemPtr item(new SyncFileItem);
+    item->_file = filePath;
+
+    const auto isDirectory = properties.value(QStringLiteral("resourcetype")).contains(QStringLiteral("collection"));
+    item->_type = isDirectory ? ItemTypeDirectory : ItemTypeFile;
+
+    item->_size = isDirectory ? 0 : properties.value(QStringLiteral("size")).toInt();
+    item->_fileId = properties.value(QStringLiteral("fileId")).toUtf8();
+
+    if (properties.contains(QStringLiteral("permissions"))) {
+        item->_remotePerm = RemotePermissions::fromServerString(properties.value("permissions"));
+        item->_isShared = item->_remotePerm.hasPermission(RemotePermissions::IsShared);
+        item->_lastShareStateFetchedTimestmap = QDateTime::currentMSecsSinceEpoch();
+    }
+
+    if (!properties.value(QStringLiteral("share-types")).isEmpty()) {
+        item->_remotePerm.setPermission(RemotePermissions::IsShared);
+        item->_isShared = true;
+        item->_lastShareStateFetchedTimestmap = QDateTime::currentMSecsSinceEpoch();
+    }
+
+    item->_isEncrypted = properties.value(QStringLiteral("is-encrypted")) == QStringLiteral("1");
+    item->_locked = properties.value(QStringLiteral("lock")) == QStringLiteral("1")
+        ? SyncFileItem::LockStatus::LockedItem : SyncFileItem::LockStatus::UnlockedItem;
+    item->_lockOwnerDisplayName = properties.value(QStringLiteral("lock-owner-displayname"));
+    item->_lockOwnerId = properties.value(QStringLiteral("lock-owner"));
+    item->_lockEditorApp = properties.value(QStringLiteral("lock-owner-editor"));
+
+    {
+        auto ok = false;
+        const auto intConvertedValue = properties.value(QStringLiteral("lock-owner-type")).toULongLong(&ok);
+        if (ok) {
+            item->_lockOwnerType = static_cast<SyncFileItem::LockOwnerType>(intConvertedValue);
+        } else {
+            item->_lockOwnerType = SyncFileItem::LockOwnerType::UserLock;
+        }
+    }
+
+    {
+        auto ok = false;
+        const auto intConvertedValue = properties.value(QStringLiteral("lock-time")).toULongLong(&ok);
+        if (ok) {
+            item->_lockTime = intConvertedValue;
+        } else {
+            item->_lockTime = 0;
+        }
+    }
+
+    {
+        auto ok = false;
+        const auto intConvertedValue = properties.value(QStringLiteral("lock-timeout")).toULongLong(&ok);
+        if (ok) {
+            item->_lockTimeout = intConvertedValue;
+        } else {
+            item->_lockTimeout = 0;
+        }
+    }
+
+    const auto date = QDateTime::fromString(properties.value(QStringLiteral("getlastmodified")), Qt::RFC2822Date);
+    Q_ASSERT(date.isValid());
+    if (date.toSecsSinceEpoch() > 0) {
+        item->_modtime = date.toSecsSinceEpoch();
+    }
+
+    if (properties.contains(QStringLiteral("getetag"))) {
+        item->_etag = parseEtag(properties.value(QStringLiteral("getetag")).toUtf8());
+    }
+
+    if (properties.contains(QStringLiteral("checksums"))) {
+        item->_checksumHeader = findBestChecksum(properties.value("checksums").toUtf8());
+    }
+    return item;
 }
 
 bool EditLocallyJob::isTokenValid(const QString &token)
@@ -309,6 +331,7 @@ OCC::Folder *EditLocallyJob::findFolderForFile(const QString &relPath, const QSt
 
     const auto relPathSplit = relPath.split(QLatin1Char('/'));
 
+    // a file is on the first level of remote root, so, we just need a proper folder that points to a remote root
     if (relPathSplit.size() == 1) {
         const auto foundIt = std::find_if(std::begin(folderMap), std::end(folderMap), [&userId](const OCC::Folder *folder) {
             return folder->remotePath() == QStringLiteral("/") && folder->accountState()->account()->userIdAtHostWithPort() == userId;
@@ -318,6 +341,7 @@ OCC::Folder *EditLocallyJob::findFolderForFile(const QString &relPath, const QSt
     }
 
     for (const auto &folder : folderMap) {
+        // make sure we properly handle folders with non-root(nested) remote paths
         if (relPathSplit.size() > 1 && folder->remotePath() != QStringLiteral("/") && !relPath.startsWith(folder->remotePath())) {
             continue;
         }
@@ -387,34 +411,31 @@ void EditLocallyJob::startEditLocally()
 
     Systray::instance()->createEditFileLocallyLoadingDialog(_fileName);
 
-    // try to subscribe for specific sync item's 'finished' signal
-    if (_folderForFile->isSyncRunning()/* && !_folderForFile->vfs().isHydrating()*/) {
-        const auto syncFinishedConnectionWaitTerminate = connect(_folderForFile, &Folder::syncFinished, this, [this]() {
-            disconnectSyncFinished();
+    if (_folderForFile->isSyncRunning()) {
+        // in case sync is already running - terminate it and start a new one
+        _syncFinishedConnection = connect(_folderForFile, &Folder::syncFinished, this, [this]() {
+            disconnect(_syncFinishedConnection);
+            _syncFinishedConnection = {};
 
-            const auto itemDiscoveredConnection = QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscovered, this, &EditLocallyJob::slotItemDiscovered);
-            EditLocallyManager::instance()->folderItemDiscoveredConnections.insert(_localFilePath, itemDiscoveredConnection);
+            // connect to a SyncEngine::itemDiscovered so we can complete the job as soon as the file in question is discovered 
+            QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscovered, this, &EditLocallyJob::slotItemDiscovered);
 
             _folderForFile->startSync(_relPath, _item);
         });
-
-        EditLocallyManager::instance()->folderSyncFinishedConnections.insert(_localFilePath, syncFinishedConnectionWaitTerminate);
         _folderForFile->slotTerminateSync();
 
         return;
     }
 
-    const auto itemDiscoveredConnection = QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscovered, this, &EditLocallyJob::slotItemDiscovered);
-    EditLocallyManager::instance()->folderItemDiscoveredConnections.insert(_localFilePath, itemDiscoveredConnection);
+    QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscovered, this, &EditLocallyJob::slotItemDiscovered);
     _folderForFile->startSync(_relPath, _item);
 }
 
 void EditLocallyJob::slotItemCompleted(const OCC::SyncFileItemPtr &item)
 {
     if (item->_file == _relPath) {
-        disconnectItemCompleted();
-        disconnectItemDiscovered();
-        disconnectSyncFinished();
+        disconnect(&_folderForFile->syncEngine(), &SyncEngine::itemCompleted, this, &EditLocallyJob::slotItemCompleted);
+        disconnect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscovered, this, &EditLocallyJob::slotItemDiscovered);
         openFile();
     }
 }
@@ -422,55 +443,14 @@ void EditLocallyJob::slotItemCompleted(const OCC::SyncFileItemPtr &item)
 void EditLocallyJob::slotItemDiscovered(const OCC::SyncFileItemPtr &item)
 {
     if (item->_file == _relPath) {
-        disconnectItemDiscovered();
+        disconnect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscovered, this, &EditLocallyJob::slotItemDiscovered);
         if (item->_instruction == CSYNC_INSTRUCTION_NONE) {
+            // return early if the file is already in sync
             slotItemCompleted(item);
             return;
         }
-        const auto itemCompletedConnection = QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemCompleted, this, &EditLocallyJob::slotItemCompleted);
-        EditLocallyManager::instance()->folderItemCompletedConnections.insert(_localFilePath, itemCompletedConnection);
-    }
-}
-
-void EditLocallyJob::disconnectItemCompleted() const
-{
-    if (_localFilePath.isEmpty()) {
-        return;
-    }
-
-    const auto manager = EditLocallyManager::instance();
-
-    if (const auto existingConnection = manager->folderItemCompletedConnections.value(_localFilePath)) {
-        disconnect(existingConnection);
-        manager->folderItemCompletedConnections.remove(_localFilePath);
-    }
-}
-
-void EditLocallyJob::disconnectItemDiscovered() const
-{
-    if (_localFilePath.isEmpty()) {
-        return;
-    }
-
-    const auto manager = EditLocallyManager::instance();
-
-    if (const auto existingConnection = manager->folderItemDiscoveredConnections.value(_localFilePath)) {
-        disconnect(existingConnection);
-        manager->folderItemDiscoveredConnections.remove(_localFilePath);
-    }
-}
-
-void EditLocallyJob::disconnectSyncFinished() const
-{
-    if(_localFilePath.isEmpty()) {
-        return;
-    }
-
-    const auto manager = EditLocallyManager::instance();
-
-    if (const auto existingConnection = manager->folderSyncFinishedConnections.value(_localFilePath)) {
-        disconnect(existingConnection);
-        manager->folderSyncFinishedConnections.remove(_localFilePath);
+        // or connect to the SyncEngine::itemCompleted and wait till the file sync is completed
+        QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemCompleted, this, &EditLocallyJob::slotItemCompleted);
     }
 }
 
