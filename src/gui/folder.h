@@ -327,7 +327,7 @@ public slots:
      *
      * If the selectedFilePath, only that file will be synced.
      */
-    void startSync(const QString &selectedFilePath = {});
+    void startSync(const QString &selectedFilePath = {}, const SyncFileItemPtr &selectedFileItem = {});
 
     int slotDiscardDownloadProgress();
     int downloadInfoCount();

@@ -118,13 +118,121 @@ void EditLocallyJob::remoteTokenCheckResultReceived(const int statusCode)
         return;
     }
 
-    proceedWithSetup();
+    QString remoteParentPath = QStringLiteral("/");
+
+    auto relPathSplit = _relPath.split(QLatin1Char('/'));
+    if (relPathSplit.size() > 1) {
+        relPathSplit.removeLast();
+        remoteParentPath = relPathSplit.join(QLatin1Char('/'));
+    }
+
+    QVariantMap items;
+
+    const auto job = new LsColJob(_accountState->account(), remoteParentPath, this);
+    QList<QByteArray> props;
+    props << "resourcetype"
+          << "getlastmodified"
+          << "getcontentlength"
+          << "getetag"
+          << "http://owncloud.org/ns:size"
+          << "http://owncloud.org/ns:id"
+          << "http://owncloud.org/ns:fileid"
+          << "http://owncloud.org/ns:dDC"
+          << "http://owncloud.org/ns:permissions"
+          << "http://owncloud.org/ns:checksums";
+
+    job->setProperties(props);
+    connect(job, &LsColJob::directoryListingIterated, this, [&items, this](const QString &name, const QMap<QString, QString> &properties) {
+        if (name.endsWith(_relPath)) {
+            SyncFileItemPtr item(new SyncFileItem);
+            item->_file = _relPath;
+            item->_size = properties.value(QStringLiteral("size")).toInt();
+            item->_fileId = properties.value(QStringLiteral("fileId")).toUtf8();
+            const auto isDirectory = properties.value(QStringLiteral("resourcetype")).contains(QStringLiteral("collection"));
+            item->_type = isDirectory ? ItemTypeDirectory : ItemTypeFile;
+
+            if (properties.contains(QStringLiteral("permissions"))) {
+                item->_remotePerm = RemotePermissions::fromServerString(properties.value("permissions"));
+                item->_isShared = item->_remotePerm.hasPermission(RemotePermissions::IsShared);
+                item->_lastShareStateFetchedTimestmap = QDateTime::currentMSecsSinceEpoch();
+            }
+
+            if (!properties.value(QStringLiteral("share-types")).isEmpty()) {
+                item->_remotePerm.setPermission(RemotePermissions::IsShared);
+                item->_isShared = true;
+                item->_lastShareStateFetchedTimestmap = QDateTime::currentMSecsSinceEpoch();
+            }
+
+            item->_isEncrypted = properties.value(QStringLiteral("is-encrypted")) == QStringLiteral("1");
+            item->_locked = properties.value(QStringLiteral("lock")) == QStringLiteral("1")
+                ? SyncFileItem::LockStatus::LockedItem
+                : SyncFileItem::LockStatus::UnlockedItem;
+            item->_lockOwnerDisplayName = properties.value(QStringLiteral("lock-owner-displayname"));
+            item->_lockOwnerId = properties.value(QStringLiteral("lock-owner"));
+            item->_lockEditorApp = properties.value(QStringLiteral("lock-owner-editor"));
+
+            {
+                auto ok = false;
+                const auto intConvertedValue = properties.value(QStringLiteral("lock-owner-type")).toULongLong(&ok);
+                if (ok) {
+                    item->_lockOwnerType = static_cast<SyncFileItem::LockOwnerType>(intConvertedValue);
+                } else {
+                    item->_lockOwnerType = SyncFileItem::LockOwnerType::UserLock;
+                }
+            }
+
+            {
+                auto ok = false;
+                const auto intConvertedValue = properties.value(QStringLiteral("lock-time")).toULongLong(&ok);
+                if (ok) {
+                    item->_lockTime = intConvertedValue;
+                } else {
+                    item->_lockTime = 0;
+                }
+            }
+
+            {
+                auto ok = false;
+                const auto intConvertedValue = properties.value(QStringLiteral("lock-timeout")).toULongLong(&ok);
+                if (ok) {
+                    item->_lockTimeout = intConvertedValue;
+                } else {
+                    item->_lockTimeout = 0;
+                }
+            }
+
+            const auto date = QDateTime::fromString(properties.value(QStringLiteral("getlastmodified")), Qt::RFC2822Date);
+            Q_ASSERT(date.isValid());
+            if (date.toSecsSinceEpoch() > 0) {
+                item->_modtime = date.toSecsSinceEpoch();
+            }
+
+            if (properties.contains(QStringLiteral("getetag"))) {
+                item->_etag = parseEtag(properties.value(QStringLiteral("getetag")).toUtf8());
+            }
+
+            if (properties.contains(QStringLiteral("checksums"))) {
+                item->_checksumHeader = findBestChecksum(properties.value("checksums").toUtf8());
+            }
+
+            _item = item;
+        }
+    });
+    connect(job, &LsColJob::finishedWithoutError, this, [this]() {
+        proceedWithSetup();
+    });
+    job->start();
 }
 
 void EditLocallyJob::proceedWithSetup()
 {
     if (!_tokenVerified) {
         qCWarning(lcEditLocallyJob) << "Could not proceed with setup as token is not verified.";
+        return;
+    }
+
+    if (!_item || _item->isEmpty()) {
+        showError(tr("Could not find a file for local editing. Make sure its path is valid and it is synced locally."), _relPath);
         return;
     }
 
@@ -194,11 +302,25 @@ bool EditLocallyJob::isRelPathValid(const QString &relPath)
 OCC::Folder *EditLocallyJob::findFolderForFile(const QString &relPath, const QString &userId)
 {
     if (relPath.isEmpty()) {
-        return false;
+        return nullptr;
     }
 
     const auto folderMap = FolderMan::instance()->map();
+
+    const auto relPathSplit = relPath.split(QLatin1Char('/'));
+
+    if (relPathSplit.size() == 1) {
+        const auto foundIt = std::find_if(std::begin(folderMap), std::end(folderMap), [&userId](const OCC::Folder *folder) {
+            return folder->remotePath() == QStringLiteral("/") && folder->accountState()->account()->userIdAtHostWithPort() == userId;
+        });
+
+        return foundIt != std::end(folderMap) ? foundIt.value() : nullptr;
+    }
+
     for (const auto &folder : folderMap) {
+        if (relPathSplit.size() > 1 && folder->remotePath() != QStringLiteral("/") && !relPath.startsWith(folder->remotePath())) {
+            continue;
+        }
         if (folder->accountState()->account()->userIdAtHostWithPort() != userId) {
             continue;
         }
@@ -273,7 +395,7 @@ void EditLocallyJob::startEditLocally()
             const auto itemDiscoveredConnection = QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscovered, this, &EditLocallyJob::slotItemDiscovered);
             EditLocallyManager::instance()->folderItemDiscoveredConnections.insert(_localFilePath, itemDiscoveredConnection);
 
-            _folderForFile->startSync(_relPath);
+            _folderForFile->startSync(_relPath, _item);
         });
 
         EditLocallyManager::instance()->folderSyncFinishedConnections.insert(_localFilePath, syncFinishedConnectionWaitTerminate);
@@ -284,7 +406,7 @@ void EditLocallyJob::startEditLocally()
 
     const auto itemDiscoveredConnection = QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscovered, this, &EditLocallyJob::slotItemDiscovered);
     EditLocallyManager::instance()->folderItemDiscoveredConnections.insert(_localFilePath, itemDiscoveredConnection);
-    _folderForFile->startSync({_relPath});
+    _folderForFile->startSync(_relPath, _item);
 }
 
 void EditLocallyJob::slotItemCompleted(const OCC::SyncFileItemPtr &item)

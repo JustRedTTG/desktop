@@ -75,6 +75,7 @@ private:
     QString _userId;
     QString _relPath;
     QString _token;
+    SyncFileItemPtr _item;
 
     QString _fileName;
     QString _localFilePath;

@@ -829,7 +829,7 @@ bool Folder::reloadExcludes()
     return _engine->excludedFiles().reloadExcludeFiles();
 }
 
-void Folder::startSync(const QString &selectedFilePath)
+void Folder::startSync(const QString &selectedFilePath, const SyncFileItemPtr &selectedFileItem)
 {
     if (isBusy()) {
         qCCritical(lcFolder) << "ERROR csync is still running and new sync requested.";
@@ -866,26 +866,22 @@ void Folder::startSync(const QString &selectedFilePath)
     bool periodicFullLocalDiscoveryNow =
         fullLocalDiscoveryInterval.count() >= 0 // negative means we don't require periodic full runs
         && _timeSinceLastFullLocalDiscovery.hasExpired(fullLocalDiscoveryInterval.count());
-    SyncJournalFileRecord selectedFileRecord;
-    if (!selectedFilePath.isEmpty() && _journal.getFileRecord(selectedFilePath, &selectedFileRecord) && selectedFileRecord.isValid()) {
+    if (!selectedFilePath.isEmpty() && selectedFileItem && !selectedFileItem->isEmpty()) {
         qCInfo(lcFolder) << "Going to sync just one file";
-        const auto localDiscoveryPath = [&selectedFileRecord]() {
-            if (selectedFileRecord.isDirectory()) {
-                return selectedFileRecord.path();
+        const auto localDiscoveryPath = [&selectedFileItem]() {
+            if (selectedFileItem->isDirectory()) {
+                return selectedFileItem->_file;
             }
-            if (!selectedFileRecord.isDirectory()) {
-                auto selectedFilePathSplit = selectedFileRecord.path().split(QLatin1Char('/'), Qt::SkipEmptyParts);
-                if (selectedFilePathSplit.size() > 1) {
-                    selectedFilePathSplit.removeLast();
-                    return selectedFilePathSplit.join(QLatin1Char('/'));
-                } else {
-                    return QStringLiteral("/");
-                }
+            auto selectedFilePathSplit = selectedFileItem->_file.split(QLatin1Char('/'), Qt::SkipEmptyParts);
+            if (selectedFilePathSplit.size() > 1) {
+                selectedFilePathSplit.removeLast();
+                return selectedFilePathSplit.join(QLatin1Char('/'));
+            } else {
+                return QStringLiteral("/");
             }
-            return QString{};
         }();
         _engine->setLocalDiscoveryOptions(LocalDiscoveryStyle::DatabaseAndFilesystem, {localDiscoveryPath});
-        _engine->setExclusiveDiscoveryOptions({localDiscoveryPath, SyncFileItem::fromSyncJournalFileRecord(selectedFileRecord)});
+        _engine->setExclusiveDiscoveryOptions({localDiscoveryPath, selectedFileItem});
         _localDiscoveryTracker->startSyncPartialDiscovery();
     } else if (_folderWatcher && _folderWatcher->isReliable()
         && hasDoneFullLocalDiscovery
