@@ -1451,7 +1451,7 @@ void FolderMan::leaveShare(const QString &localFile)
         const auto leaveShareJob = new SimpleApiJob(folder->accountState()->account(), folder->accountState()->account()->davPath() + filePathRelative);
         leaveShareJob->setVerb(SimpleApiJob::Verb::Delete);
         connect(leaveShareJob, &SimpleApiJob::resultReceived, this, [this, folder](int statusCode) {
-            Q_UNUSED(statusCode);
+            Q_UNUSED(statusCode)
             scheduleFolder(folder);
         });
         leaveShareJob->start();

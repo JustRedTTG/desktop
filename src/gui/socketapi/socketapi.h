@@ -79,7 +79,8 @@ private:
     // Helper structure for getting information on a file
     // based on its local path - used for nearly all remote
     // actions.
-    struct FileData {
+    struct FileData
+    {
         static FileData get(const QString &localFile);
         [[nodiscard]] SyncFileStatus syncFileStatus() const;
         [[nodiscard]] SyncJournalFileRecord journalRecord() const;
@@ -154,9 +155,9 @@ private:
     sendLockFileCommandMenuEntries(const QFileInfo &fileInfo, Folder *const syncFolder, const FileData &fileData, const SocketListener *const listener) const;
 
     void sendLockFileInfoMenuEntries(const QFileInfo &fileInfo,
-                                     Folder *const syncFolder,
+                                     Folder* const syncFolder,
                                      const FileData &fileData,
-                                     const SocketListener *const listener,
+                                     const SocketListener* const listener,
                                      const SyncJournalFileRecord &record) const;
 
     /** Send the list of menu item. (added in version 1.1)
@@ -170,7 +171,7 @@ private:
 
     /// Direct Editing
     Q_INVOKABLE void command_EDIT(const QString &localFile, OCC::SocketListener *listener);
-    DirectEditor *getDirectEditorForLocalFile(const QString &localFile);
+    DirectEditor* getDirectEditorForLocalFile(const QString &localFile);
 
 #if GUI_TESTING
     Q_INVOKABLE void command_ASYNC_ASSERT_ICON_IS_EQUAL(const QSharedPointer<SocketApiJob> &job);
