@@ -642,7 +642,7 @@ void SyncEngine::startSync()
             : ProcessDirectoryJob::ParentDontExist;
 
         discoveryJob = new ProcessDirectoryJob(_discoveryPhase.data(),
-                                               PinState::AlwaysLocal,
+                                               PinState::AlwaysLocal, // we migght need to use ingerited state for vfs or even check if the folder does not exist than set the state to online only, so the folder will not occupy a lot of space when it fully syncs
                                                path,
                                                _singleItemDiscoveryOptions.item,
                                                localQueryMode,

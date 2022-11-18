@@ -415,6 +415,7 @@ void EditLocallyJob::startEditLocally()
 
     Systray::instance()->createEditFileLocallyLoadingDialog(_fileName);
 
+    // besides termination, we may probably have to pause all folders and unpause after edit locally job is complete because other folders are preventing us to sync
     for (const auto &folder : FolderMan::instance()->map()) {
         if (folder != _folderForFile) {
             folder->slotTerminateSync();
