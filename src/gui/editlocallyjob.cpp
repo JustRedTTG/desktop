@@ -447,6 +447,10 @@ void EditLocallyJob::startEditLocally()
             // connect to a SyncEngine::itemDiscovered so we can complete the job as soon as the file in question is discovered 
             QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscovered, this, &EditLocallyJob::slotItemDiscovered);
 
+            if (_folderForFile->journalDb()->errorBlacklistEntry(_item->_file).isValid()) {
+                _folderForFile->journalDb()->wipeErrorBlacklistEntry(_item->_file);
+            }
+
             _folderForFile->startSync(_relPath, _item);
         });
         _folderForFile->slotTerminateSync();
@@ -472,6 +476,9 @@ void EditLocallyJob::startEditLocally()
     }
 
     QObject::connect(&_folderForFile->syncEngine(), &SyncEngine::itemDiscovered, this, &EditLocallyJob::slotItemDiscovered);
+    if (_folderForFile->journalDb()->errorBlacklistEntry(_item->_file).isValid()) {
+        _folderForFile->journalDb()->wipeErrorBlacklistEntry(_item->_file);
+    }
     _folderForFile->startSync(_relPath, _item);
 }
 
